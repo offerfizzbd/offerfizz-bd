@@ -38,9 +38,8 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   
-  // Modals State
-  const [selectedProduct, setSelectedProduct] = useState(null); // for order popup
-  const [viewProductDetails, setViewProductDetails] = useState(null); // for product details popup
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [viewProductDetails, setViewProductDetails] = useState(null);
 
   const [orderForm, setOrderForm] = useState({
     name: '',
@@ -75,7 +74,6 @@ export default function App() {
     localStorage.setItem('offerfizz_orders', JSON.stringify(orders));
   }, [orders]);
 
-  // Image Upload Handler (Base64)
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -89,7 +87,7 @@ export default function App() {
 
   const openOrderModal = (product) => {
     setSelectedProduct(product);
-    setViewProductDetails(null); // close details modal if open
+    setViewProductDetails(null);
     setOrderForm({
       name: '',
       mobile: '',
@@ -250,13 +248,11 @@ export default function App() {
             ))}
           </div>
 
-          {/* ২-কলামের প্রোডাক্ট গ্রিড */}
           <div className="px-3">
             <h3 className="text-xs font-bold text-gray-700 mb-2">সকল প্রোডাক্ট ({filteredProducts.length})</h3>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
               {filteredProducts.map((product) => (
                 <div key={product.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col justify-between">
-                  {/* ছবিতে বা নামে চাপ দিলে ডিটেলস পপআপ শো করবে */}
                   <div onClick={() => setViewProductDetails(product)} className="cursor-pointer">
                     <img 
                       src={product.image} 
@@ -471,7 +467,6 @@ export default function App() {
                       </select>
                     </div>
 
-                    {/* সরাসরি ফাইল আপলোড */}
                     <div>
                       <label className="block text-[11px] font-bold text-gray-600 mb-1">গ্যালারি থেকে ছবি আপলোড করুন:</label>
                       <input 
@@ -536,7 +531,6 @@ export default function App() {
         </main>
       )}
 
-      {/* 🔍 প্রোডাক্ট ডিটেলস পপআপ মডাল */}
       {viewProductDetails && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3">
           <div className="bg-white rounded-2xl max-w-md w-full p-4 relative max-h-[90vh] overflow-y-auto">
@@ -571,7 +565,6 @@ export default function App() {
         </div>
       )}
 
-      {/* 📝 অর্ডার ফর্ম পপআপ মডাল */}
       {selectedProduct && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3">
           <div className="bg-white rounded-2xl max-w-md w-full p-4 relative max-h-[90vh] overflow-y-auto">
@@ -688,8 +681,6 @@ export default function App() {
         </div>
       )}
 
-     <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
-       
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
         <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center ${activeTab === 'home' ? 'text-purple-700 font-bold' : ''}`}>
           <span>🛍️ Home</span>
@@ -698,4 +689,11 @@ export default function App() {
           <span>📦 Orders</span>
         </button>
         <button onClick={() => setActiveTab('admin')} className={`flex flex-col items-center ${activeTab === 'admin' ? 'text-purple-700 font-bold' : ''}`}>
-          <span>👤 Ad
+          <span>👤 Admin</span>
+        </button>
+      </div>
+
+    </div>
+  );
+ }
+                    
