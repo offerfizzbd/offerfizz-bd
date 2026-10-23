@@ -112,7 +112,7 @@ export default function App() {
       productName: selectedProduct.name,
       color: selectedColor,
       size: selectedSize,
-      productImage: activeImage, // LOCKS exact image customer selected
+      productImage: activeImage,
       customerName: customerInfo.name,
       customerPhone: customerInfo.phone,
       customerAddress: customerInfo.address,
@@ -132,7 +132,7 @@ export default function App() {
     setCustomerInfo({ name: '', phone: '', address: '', area: '60' });
   };
 
-  // Admin Order Status Update (Approve / Reject / Change Status)
+  // Admin Order Status Update
   const updateOrderStatus = (orderId, newStatus) => {
     setOrders(orders.map(order => order.id === orderId ? { ...order, status: newStatus } : order));
   };
@@ -195,7 +195,7 @@ export default function App() {
         </main>
       )}
 
-      {/* ORDER / CHECKOUT MODAL WITH COLOR LOCK & SCREENSHOT */}
+      {/* ORDER / CHECKOUT MODAL */}
       {isCheckoutOpen && selectedProduct && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 relative max-h-[90vh] overflow-y-auto shadow-2xl">
@@ -378,4 +378,5 @@ export default function App() {
                               <div className="text-gray-500 max-w-xs">{order.customerAddress}</div>
                             </td>
                             <td className="p-3">
-                              <span className="font-bold uppercase text-gray-800">{or
+                              <span className="font-bold uppercase text-gray-800">{order.paymentMethod}</span>
+                              <div className="text-gray-500">TrxID: {order.tr
