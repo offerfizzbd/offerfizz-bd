@@ -522,4 +522,234 @@ export default function App() {
           <main className="p-4 max-w-md mx-auto">
             {!customerUser ? (
               <div className="bg-white p-5 rounded-2xl shadow-md border text-xs">
-   
+   {viewProductDetails && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3">
+            <div className="bg-white rounded-2xl max-w-md w-full p-4 relative max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-2 border-b pb-2">
+                <h3 className="text-sm font-bold text-gray-800">প্রোডাক্ট বিস্তারিত</h3>
+                <button onClick={() => setViewProductDetails(null)} className="text-gray-500 font-bold px-2">✕</button>
+              </div>
+
+              <img 
+                src={viewProductDetails.images && viewProductDetails.images.length > 0 ? viewProductDetails.images[activeImageIndex] : ''} 
+                alt={viewProductDetails.name} 
+                className="w-full h-52 object-cover rounded-xl mb-2" 
+              />
+
+              {viewProductDetails.images && viewProductDetails.images.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto mb-3 pb-1">
+                  {viewProductDetails.images.map((img, idx) => (
+                    <img 
+                      key={idx} 
+                      src={img} 
+                      alt="Thumbnail" 
+                      onClick={() => setActiveImageIndex(idx)}
+                      className={`w-12 h-12 object-cover rounded-lg border-2 cursor-pointer ${activeImageIndex === idx ? 'border-purple-600 scale-105' : 'border-gray-200 opacity-70'}`}
+                    />
+                  ))}
+                </div>
+              )}
+
+              <h2 className="text-base font-bold text-gray-800 mb-1">{viewProductDetails.name}</h2>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg font-extrabold text-purple-700">৳ {viewProductDetails.price}</span>
+                {viewProductDetails.regularPrice > viewProductDetails.price && (
+                  <span className="text-xs text-gray-400 line-through">৳ {viewProductDetails.regularPrice}</span>
+                )}
+              </div>
+
+              <div className="bg-gray-50 p-3 rounded-xl border mb-3 text-xs text-gray-700 space-y-2">
+                <p><strong>ক্যাটাগরি:</strong> {viewProductDetails.category}</p>
+                <p><strong>উপলব্ধ সাইজ:</strong> {viewProductDetails.sizes ? viewProductDetails.sizes.join(', ') : 'Standard'}</p>
+                <p className="font-bold border-t pt-2">বিবরণ:</p>
+                <p className="whitespace-pre-line leading-relaxed text-gray-800 font-medium">{viewProductDetails.description}</p>
+              </div>
+
+              <button 
+                onClick={() => openOrderModal(viewProductDetails)}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md"
+              >
+                Order Now
+              </button>
+            </div>
+          </div>
+        )}
+
+        {selectedProduct && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3">
+            <div className="bg-white rounded-2xl max-w-md w-full p-4 relative max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-3 border-b pb-2">
+                <h3 className="text-base font-extrabold text-emerald-700">Confirm Order</h3>
+                <button onClick={() => setSelectedProduct(null)} className="text-gray-500 font-bold px-2">✕</button>
+              </div>
+
+              <form onSubmit={handleConfirmOrder} className="space-y-3 text-xs">
+                <div>
+                  <label className="block font-bold mb-1">Product:</label>
+                  <div className="bg-gray-100 p-2 rounded border font-medium">
+                    {selectedProduct.name}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1">Your Name:</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="Enter your name"
+                    value={orderForm.name}
+                    onChange={(e) => setOrderForm({ ...orderForm, name: e.target.value })}
+                    className="w-full border rounded p-2"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1">Mobile Number:</label>
+                  <input 
+                    type="tel" 
+                    required
+                    placeholder="01XXXXXXXXX"
+                    value={orderForm.mobile}
+                    onChange={(e) => setOrderForm({ ...orderForm, mobile: e.target.value })}
+                    className="w-full border rounded p-2"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1">Full Address:</label>
+                  <textarea 
+                    required
+                    rows="2"
+                    placeholder="Your address"
+                    value={orderForm.address}
+                    onChange={(e) => setOrderForm({ ...orderForm, address: e.target.value })}
+                    className="w-full border rounded p-2"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1">Select Size:</label>
+                  <select 
+                    value={orderForm.size} 
+                    onChange={(e) => setOrderForm({ ...orderForm, size: e.target.value })}
+                    className="w-full border rounded p-2 bg-white"
+                  >
+                    {selectedProduct.sizes?.map((sz, idx) => (
+                      <option key={idx} value={sz}>{sz}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1">Delivery Area:</label>
+                  <select 
+                    value={orderForm.deliveryArea} 
+                    onChange={(e) => setOrderForm({ ...orderForm, deliveryArea: e.target.value })}
+                    className="w-full border rounded p-2 bg-white"
+                  >
+                    <option value="outside">Outside Dhaka — (Charge: ৳120)</option>
+                    <option value="inside">Inside Dhaka — (Charge: ৳60)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1">Payment Method:</label>
+                  <select 
+                    value={orderForm.paymentMethod} 
+                    onChange={(e) => setOrderForm({ ...orderForm, paymentMethod: e.target.value })}
+                    className="w-full border rounded p-2 bg-white"
+                  >
+                    <option value="COD">Cash on Delivery (COD)</option>
+                    <option value="bKash">bKash Personal ({settings.bkashNumber})</option>
+                    <option value="Nagad">Nagad Personal ({settings.nagadNumber})</option>
+                  </select>
+                </div>
+
+                {(orderForm.paymentMethod === 'bKash' || orderForm.paymentMethod === 'Nagad') && (
+                  <div className="bg-purple-50 p-2.5 rounded-xl border border-purple-200 space-y-2">
+                    <p className="text-[11px] text-purple-800 font-semibold">
+                      দয়া করে <span className="font-bold">{settings[orderForm.paymentMethod.toLowerCase() + 'Number']}</span> নম্বরে টাকা পাঠিয়ে TrxID এবং স্ক্রিনশট দিন:
+                    </p>
+                    
+                    <input 
+                      type="text" 
+                      placeholder="Enter TrxID"
+                      value={orderForm.trxId}
+                      onChange={(e) => setOrderForm({ ...orderForm, trxId: e.target.value })}
+                      className="w-full border rounded p-1.5 bg-white text-xs font-mono"
+                      required
+                    />
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 mb-1">পেমেন্ট স্ক্রিনশট আপলোড করুন:</label>
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={handleScreenshotUpload}
+                        className="w-full text-xs bg-white border p-1 rounded"
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="border-2 border-dashed border-emerald-500 bg-emerald-50 p-2.5 rounded-xl text-center font-bold text-emerald-800">
+                  Total: ৳ {selectedProduct.price + (orderForm.deliveryArea === 'inside' ? 60 : 120)}
+                </div>
+
+                <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-xl shadow-md text-xs">
+                  Confirm Order
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
+          <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center ${activeTab === 'home' ? 'text-purple-700 font-bold' : ''}`}>
+            <span>🛍️ Home</span>
+          </button>
+          <button onClick={() => setActiveTab('orders')} className={`flex flex-col items-center ${activeTab === 'orders' ? 'text-purple-700 font-bold' : ''}`}>
+            <span>📦 Tracking</span>
+          </button>
+          <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center ${activeTab === 'profile' ? 'text-purple-700 font-bold' : ''}`}>
+            <span>👤 Account</span>
+          </button>
+        </div>
+      </div>
+
+      <footer className="bg-gray-900 text-gray-300 p-6 mt-8 border-t-4 border-purple-700 text-xs">
+        <div className="max-w-xl mx-auto space-y-4">
+          <div className="flex justify-between items-center border-b border-gray-800 pb-3">
+            <div>
+              <h3 className="text-base font-bold text-white">{settings.storeName}</h3>
+              <p className="text-[11px] text-gray-400">আপনার বিশ্বস্ত ই-কমার্স পার্টনার</p>
+            </div>
+            <div className="flex gap-3 text-lg">
+              <a href={settings.facebookUrl} target="_blank" rel="noreferrer" className="hover:text-purple-400">🌐</a>
+              <a href={settings.whatsappUrl} target="_blank" rel="noreferrer" className="hover:text-emerald-400">💬</a>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 text-[11px]">
+            <div>
+              <p className="font-bold text-white mb-1">যোগাযোগ:</p>
+              <p>📞 {settings.contactPhone}</p>
+              <p>✉️ {settings.contactEmail}</p>
+            </div>
+            <div>
+              <p className="font-bold text-white mb-1">পেমেন্ট মেথড:</p>
+              <p>● Cash on Delivery</p>
+              <p>● bKash / Nagad Personal</p>
+            </div>
+          </div>
+
+          <div className="text-center border-t border-gray-800 pt-3 text-[10px] text-gray-500">
+            © {New Date().getFullYear()} {settings.storeName}. All rights reserved.
+          </div>
+        </div>
+      </footer>
+
+    </div>
+  );
+ }
