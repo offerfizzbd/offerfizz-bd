@@ -206,7 +206,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 pb-20">
       
-      {/* হেডার */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-20 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setActiveTab('home')}>
           <span className="text-2xl">🛍️</span>
@@ -220,7 +219,6 @@ export default function App() {
         </button>
       </header>
 
-      {/* কাস্টমার ভিউ */}
       {activeTab === 'home' && (
         <main>
           <div className="p-3 bg-white border-b">
@@ -256,7 +254,6 @@ export default function App() {
             ))}
           </div>
 
-          {/* ২-কলামের প্রোডাক্ট গ্রিড */}
           <div className="px-3">
             <h3 className="text-xs font-bold text-gray-700 mb-2">সকল প্রোডাক্ট ({filteredProducts.length})</h3>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
@@ -292,9 +289,7 @@ export default function App() {
           </div>
         </main>
       )}
-
-      {/* কাস্টমার অর্ডার লিস্ট */}
-      {activeTab === 'orders' && (
+            {activeTab === 'orders' && (
         <main className="p-4 max-w-md mx-auto">
           <h2 className="text-base font-bold mb-3 text-gray-800">📦 আমার অর্ডারসমূহ</h2>
           {orders.length === 0 ? (
@@ -323,7 +318,6 @@ export default function App() {
         </main>
       )}
 
-      {/* অ্যাডমিন প্যানেল */}
       {activeTab === 'admin' && (
         <main className="p-4 max-w-2xl mx-auto">
           {!isAdminLoggedIn ? (
@@ -476,4 +470,151 @@ export default function App() {
                       </select>
                     </div>
                     <input 
-                      type="tex
+                      type="text" 
+                      placeholder="ছবি লিংক (Image URL)" 
+                      value={newProduct.image}
+                      onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
+                      className="border p-2 rounded w-full"
+                    />
+                    <button type="submit" className="bg-emerald-600 text-white font-bold py-2 rounded w-full">
+                      সেভ করুন
+                    </button>
+                  </form>
+
+                  <div className="space-y-2">
+                    {products.map((p) => (
+                      <div key={p.id} className="bg-white p-2.5 rounded-xl border flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <img src={p.image} alt={p.name} className="w-8 h-8 object-cover rounded" />
+                          <span className="font-semibold line-clamp-1">{p.name} - ৳{p.price}</span>
+                        </div>
+                        <button onClick={() => deleteProduct(p.id)} className="text-red-500 font-bold px-2">✕</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </main>
+      )}
+
+      {selectedProduct && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3">
+          <div className="bg-white rounded-2xl max-w-md w-full p-4 relative max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-3 border-b pb-2">
+              <h3 className="text-base font-extrabold text-emerald-700">Confirm order.</h3>
+              <button onClick={() => setSelectedProduct(null)} className="text-gray-500 font-bold px-2">✕</button>
+            </div>
+
+            <form onSubmit={handleConfirmOrder} className="space-y-3 text-xs">
+              <div>
+                <label className="block font-bold mb-1">Products:</label>
+                <div className="bg-gray-100 p-2 rounded border font-medium">
+                  {selectedProduct.name}
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1">Your name:</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="Enter your name."
+                  value={orderForm.name}
+                  onChange={(e) => setOrderForm({ ...orderForm, name: e.target.value })}
+                  className="w-full border rounded p-2"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1">Mobile number:</label>
+                <input 
+                  type="tel" 
+                  required
+                  placeholder="01XXXXXXXXX"
+                  value={orderForm.mobile}
+                  onChange={(e) => setOrderForm({ ...orderForm, mobile: e.target.value })}
+                  className="w-full border rounded p-2"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1">Full address:</label>
+                <textarea 
+                  required
+                  rows="2"
+                  placeholder="Example: Mirpur, Dhaka..."
+                  value={orderForm.address}
+                  onChange={(e) => setOrderForm({ ...orderForm, address: e.target.value })}
+                  className="w-full border rounded p-2"
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1">Select delivery area:</label>
+                <select 
+                  value={orderForm.deliveryArea} 
+                  onChange={(e) => setOrderForm({ ...orderForm, deliveryArea: e.target.value })}
+                  className="w-full border rounded p-2 bg-white"
+                >
+                  <option value="outside">Outside Dhaka — (charge: ৳120)</option>
+                  <option value="inside">Inside Dhaka — (charge: ৳60)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1">Payment method:</label>
+                <select 
+                  value={orderForm.paymentMethod} 
+                  onChange={(e) => setOrderForm({ ...orderForm, paymentMethod: e.target.value })}
+                  className="w-full border rounded p-2 bg-white"
+                >
+                  <option value="COD">Cash on Delivery (COD)</option>
+                  <option value="bKash">bKash Personal (01700000000)</option>
+                  <option value="Nagad">Nagad Personal (01700000000)</option>
+                </select>
+              </div>
+
+              {(orderForm.paymentMethod === 'bKash' || orderForm.paymentMethod === 'Nagad') && (
+                <div className="bg-purple-50 p-2 rounded border border-purple-200">
+                  <p className="text-[11px] text-purple-800 font-semibold mb-1">TrxID দিন:</p>
+                  <input 
+                    type="text" 
+                    placeholder="Enter TrxID"
+                    value={orderForm.trxId}
+                    onChange={(e) => setOrderForm({ ...orderForm, trxId: e.target.value })}
+                    className="w-full border rounded p-1.5 bg-white text-xs font-mono"
+                    required
+                  />
+                </div>
+              )}
+
+              <div className="border-2 border-dashed border-emerald-500 bg-emerald-50 p-2.5 rounded-xl text-center font-bold text-emerald-800">
+                Total: Tk {selectedProduct.price + (orderForm.deliveryArea === 'inside' ? 60 : 120)}
+              </div>
+
+              <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-xl shadow-md text-xs">
+                Confirm order.
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
+        <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center ${activeTab === 'home' ? 'text-purple-700 font-bold' : ''}`}>
+          <span>🛍️ Home</span>
+        </button>
+        <button onClick={() => setActiveTab('orders')} className={`flex flex-col items-center ${activeTab === 'orders' ? 'text-purple-700 font-bold' : ''}`}>
+          <span>📦 Orders</span>
+        </button>
+        <button onClick={() => setActiveTab('admin')} className={`flex flex-col items-center ${activeTab === 'admin' ? 'text-purple-700 font-bold' : ''}`}>
+          <span>👤 Admin</span>
+        </button>
+      </div>
+
+    </div>
+  );
+ }
+                  
