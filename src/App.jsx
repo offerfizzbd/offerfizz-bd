@@ -4,26 +4,32 @@ const INITIAL_PRODUCTS = [
   {
     id: 1,
     name: "🔥 পুরুষদের জন্য এক্সক্লুসিভ প্যাডিং জ্যাকেট 🧥",
+    regularPrice: 1800,
     price: 1300,
     category: "Fashion",
     images: [
       "https://images.unsplash.com/photo-1544441893-675973e31985?w=500&q=80",
       "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&q=80"
     ],
-    description: "উচ্চমানের শীতকালীন জ্যাকেট, খুবই আরামদায়ক ও ট্রেন্ডি ডিজাইন। শীতের জন্য পারফেক্ট চয়েস।",
-    sizes: ["M", "L", "XL", "Free Size / Standard"],
+    description: "🔥 Exclusive Padding Jacket for Men 🧥\n✨ Exclusive European Style ❄️ Stylish and comfortable for winter\n🧵 Fabric: Micro Fabric\n💎 Padding: 6 ounces\n👌 Inside: Taffeta Lining\n📏 Size Chart:\n✅ M: Chest 40\" | Length 27\"\n✅ L: Chest 42\" | Length 28\"\n✅ XL: Chest 44\" | Length 29\"",
+    sizes: ["M", "L", "XL"],
+    rating: 4.8,
+    reviewsCount: 12,
     stock: 15
   },
   {
     id: 2,
     name: "Wireless Bluetooth Smartwatch Ultra",
+    regularPrice: 2500,
     price: 1950,
     category: "Gadgets",
     images: [
       "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80"
     ],
-    description: "স্মার্ট ওয়াচ, হেলথ ট্র্যাকিং এবং কলিং সুবিধাসহ। স্টাইলিশ অ্যান্ড স্মার্ট।",
+    description: "⌚ Smart Watch Ultra Edition\n❤️ Heart Rate & Health Tracking\n📞 Bluetooth Calling Feature\n🔋 Long Battery Life\n💧 Water Resistant",
     sizes: ["Standard"],
+    rating: 4.5,
+    reviewsCount: 8,
     stock: 8
   }
 ];
@@ -32,11 +38,15 @@ const INITIAL_SETTINGS = {
   storeName: "OfferFizz BD",
   bannerTitle: "Welcome to OfferFizz BD!",
   bannerSubtitle: "কম দামে সেরা অফারে প্রিমিয়াম প্রোডাক্ট কিনুন।",
-  bannerBgColor: "from-purple-600 to-indigo-600",
+  bannerImage: "",
   bkashNumber: "01700000000",
   nagadNumber: "01700000000",
-  adminUser: "Md Jewel",
-  adminPass: "Jewel@338"
+  contactPhone: "01700000000",
+  contactEmail: "support@offerfizzbd.com",
+  facebookUrl: "https://facebook.com",
+  whatsappUrl: "https://wa.me/8801700000000",
+  superAdminUser: "Md Jewel",
+  superAdminPass: "Jewel@338"
 };
 
 const INITIAL_CATEGORIES = ['All', 'Fashion', 'Gadgets', 'Electronics', 'Beauty'];
@@ -62,6 +72,13 @@ export default function App() {
     return saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
   });
 
+  const [admins, setAdmins] = useState(() => {
+    const saved = localStorage.getItem('offerfizz_admins');
+    return saved ? JSON.parse(saved) : [
+      { username: 'Md Jewel', role: 'Super Admin', isFrozen: false }
+    ];
+  });
+
   const [activeTab, setActiveTab] = useState('home'); 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -70,34 +87,37 @@ export default function App() {
   const [viewProductDetails, setViewProductDetails] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
+  const [customerUser, setCustomerUser] = useState(() => {
+    const saved = localStorage.getItem('offerfizz_customer');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const [customerForm, setCustomerForm] = useState({
+    name: '', mobile: '', address: '', password: ''
+  });
+  const [isCustomerAuthMode, setIsCustomerAuthMode] = useState('login');
+
   const [orderForm, setOrderForm] = useState({
-    name: '',
-    mobile: '',
-    address: '',
-    size: '',
-    deliveryArea: 'outside',
-    paymentMethod: 'COD',
-    trxId: '',
-    paymentScreenshot: ''
+    name: '', mobile: '', address: '', size: '',
+    deliveryArea: 'outside', paymentMethod: 'COD',
+    trxId: '', paymentScreenshot: ''
   });
 
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [loggedInAdminUser, setLoggedInAdminUser] = useState('');
   const [adminUsernameInput, setAdminUsernameInput] = useState('');
   const [adminPasswordInput, setAdminPasswordInput] = useState('');
   const [adminSection, setAdminSection] = useState('dashboard');
 
-  const [newProduct, setNewProduct] = useState({
-    name: '',
-    price: '',
-    category: 'Fashion',
-    images: [],
-    description: '',
-    sizes: 'M, L, XL',
-    stock: 10
+  const [editingProductId, setEditingProductId] = useState(null);
+  const [productForm, setProductForm] = useState({
+    name: '', regularPrice: '', price: '', category: 'Fashion',
+    images: [], description: '', sizes: 'M, L, XL', stock: 10
   });
 
   const [newCatName, setNewCatName] = useState('');
   const [passForm, setPassForm] = useState({ oldPass: '', newPass: '', confirmPass: '' });
+  const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
 
   useEffect(() => {
     localStorage.setItem('offerfizz_products', JSON.stringify(products));
@@ -115,6 +135,18 @@ export default function App() {
     localStorage.setItem('offerfizz_categories', JSON.stringify(categories));
   }, [categories]);
 
+  useEffect(() => {
+    localStorage.setItem('offerfizz_admins', JSON.stringify(admins));
+  }, [admins]);
+
+  useEffect(() => {
+    if (customerUser) {
+      localStorage.setItem('offerfizz_customer', JSON.stringify(customerUser));
+    } else {
+      localStorage.removeItem('offerfizz_customer');
+    }
+  }, [customerUser]);
+
   const handleMultipleImagesUpload = (e) => {
     const files = Array.from(e.target.files);
     if (files.length > 0) {
@@ -127,8 +159,19 @@ export default function App() {
       });
 
       Promise.all(promises).then(uploadedImages => {
-        setNewProduct(prev => ({ ...prev, images: [...prev.images, ...uploadedImages] }));
+        setProductForm(prev => ({ ...prev, images: [...prev.images, ...uploadedImages] }));
       });
+    }
+  };
+
+  const handleBannerUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSettings(prev => ({ ...prev, bannerImage: reader.result }));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -143,13 +186,32 @@ export default function App() {
     }
   };
 
+  const handleCustomerAuth = (e) => {
+    e.preventDefault();
+    if (isCustomerAuthMode === 'signup') {
+      if (!customerForm.name || !customerForm.mobile || !customerForm.password) {
+        alert("দয়া করে সকল তথ্য পুরণ করুন!");
+        return;
+      }
+      const user = { name: customerForm.name, mobile: customerForm.mobile, address: customerForm.address, password: customerForm.password };
+      setCustomerUser(user);
+      alert("অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!");
+    } else {
+      if (customerUser && customerUser.mobile === customerForm.mobile && customerUser.password === customerForm.password) {
+        alert("সফলভাবে লগইন হয়েছে!");
+      } else {
+        alert("মোবাইল নম্বর বা পাসওয়ার্ড ভুল অথবা অ্যাকাউন্ট নেই!");
+      }
+    }
+  };
+
   const openOrderModal = (product) => {
     setSelectedProduct(product);
     setViewProductDetails(null);
     setOrderForm({
-      name: '',
-      mobile: '',
-      address: '',
+      name: customerUser ? customerUser.name : '',
+      mobile: customerUser ? customerUser.mobile : '',
+      address: customerUser ? customerUser.address : '',
       size: product.sizes && product.sizes.length > 0 ? product.sizes[0] : 'Standard',
       deliveryArea: 'outside',
       paymentMethod: 'COD',
@@ -182,6 +244,7 @@ export default function App() {
     const newOrder = {
       id: "ORD-" + Date.now().toString().slice(-6),
       productName: selectedProduct.name,
+      productImage: selectedProduct.images && selectedProduct.images.length > 0 ? selectedProduct.images[0] : '',
       productPrice: selectedProduct.price,
       size: orderForm.size,
       customerName: orderForm.name,
@@ -194,6 +257,8 @@ export default function App() {
       trxId: orderForm.trxId || 'N/A',
       paymentScreenshot: orderForm.paymentScreenshot || null,
       status: 'Pending',
+      packingStatus: 'Processing',
+      estimatedDelivery: '3-5 Days',
       date: new Date().toLocaleDateString('bn-BD')
     };
 
@@ -210,15 +275,35 @@ export default function App() {
 
   const handleAdminLogin = (e) => {
     e.preventDefault();
-    if (adminUsernameInput === settings.adminUser && adminPasswordInput === settings.adminPass) {
-      setIsAdminLoggedIn(true);
-    } else {
-      alert("ভুল নাম বা পাসওয়ার্ড!");
+    const adminAccount = admins.find(a => a.username === adminUsernameInput);
+    
+    if (adminAccount && adminAccount.isFrozen) {
+      alert("⚠️ আপনার অ্যাডমিন অ্যাকাউন্টটি বর্তমানে ফ্রিজ (Freeze) করা রয়েছে! সুপার অ্যাডমিনের সাথে যোগাযোগ করুন।");
+      return;
     }
+
+    if (adminUsernameInput === settings.superAdminUser && adminPasswordInput === settings.superAdminPass) {
+      setIsAdminLoggedIn(true);
+      setLoggedInAdminUser(adminUsernameInput);
+    } else {
+      alert("ভুল ইউজারনেম বা পাসওয়ার্ড!");
+    }
+  };
+
+  const toggleFreezeAdmin = (username) => {
+    if (username === settings.superAdminUser) {
+      alert("সুপার অ্যাডমিন অ্যাকাউন্ট ফ্রিজ করা সম্ভব নয়!");
+      return;
+    }
+    setAdmins(admins.map(a => a.username === username ? { ...a, isFrozen: !a.isFrozen } : a));
   };
 
   const updateOrderStatus = (orderId, newStatus) => {
     setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+  };
+
+  const updateOrderDeliveryDetails = (orderId, packingStatus, estimatedDelivery) => {
+    setOrders(orders.map(o => o.id === orderId ? { ...o, packingStatus, estimatedDelivery } : o));
   };
 
   const deleteOrder = (orderId) => {
@@ -227,24 +312,57 @@ export default function App() {
     }
   };
 
-  const handleAddProduct = (e) => {
+  const handleSaveProduct = (e) => {
     e.preventDefault();
-    if (!newProduct.name || !newProduct.price) return;
+    if (!productForm.name || !productForm.price) return;
 
-    const added = {
-      id: Date.now(),
-      name: newProduct.name,
-      price: Number(newProduct.price),
-      category: newProduct.category,
-      images: newProduct.images.length > 0 ? newProduct.images : ["https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80"],
-      description: newProduct.description || "উচ্চমানের প্রিমিয়াম প্রোডাক্ট।",
-      sizes: newProduct.sizes ? newProduct.sizes.split(',').map(s => s.trim()) : ['Standard'],
-      stock: Number(newProduct.stock)
-    };
+    if (editingProductId) {
+      setProducts(products.map(p => p.id === editingProductId ? {
+        ...p,
+        name: productForm.name,
+        regularPrice: Number(productForm.regularPrice) || Number(productForm.price),
+        price: Number(productForm.price),
+        category: productForm.category,
+        images: productForm.images.length > 0 ? productForm.images : p.images,
+        description: productForm.description,
+        sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['Standard'],
+        stock: Number(productForm.stock)
+      } : p));
+      setEditingProductId(null);
+      alert("প্রোডাক্ট এডিট সম্পন্ন হয়েছে!");
+    } else {
+      const added = {
+        id: Date.now(),
+        name: productForm.name,
+        regularPrice: Number(productForm.regularPrice) || Number(productForm.price),
+        price: Number(productForm.price),
+        category: productForm.category,
+        images: productForm.images.length > 0 ? productForm.images : ["https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80"],
+        description: productForm.description || "উচ্চমানের প্রিমিয়াম প্রোডাক্ট।",
+        sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['Standard'],
+        rating: 5.0,
+        reviewsCount: 1,
+        stock: Number(productForm.stock)
+      };
+      setProducts([added, ...products]);
+      alert("নতুন প্রোডাক্ট যুক্ত হয়েছে!");
+    }
 
-    setProducts([added, ...products]);
-    setNewProduct({ name: '', price: '', category: 'Fashion', images: [], description: '', sizes: 'M, L, XL', stock: 10 });
-    alert("প্রোডাক্ট সফলভাবে যুক্ত হয়েছে!");
+    setProductForm({ name: '', regularPrice: '', price: '', category: 'Fashion', images: [], description: '', sizes: 'M, L, XL', stock: 10 });
+  };
+
+  const handleEditProductClick = (product) => {
+    setEditingProductId(product.id);
+    setProductForm({
+      name: product.name,
+      regularPrice: product.regularPrice || product.price,
+      price: product.price,
+      category: product.category,
+      images: product.images || [],
+      description: product.description,
+      sizes: product.sizes ? product.sizes.join(', ') : 'Standard',
+      stock: product.stock
+    });
   };
 
   const deleteProduct = (id) => {
@@ -271,7 +389,7 @@ export default function App() {
 
   const handleChangePassword = (e) => {
     e.preventDefault();
-    if (passForm.oldPass !== settings.adminPass) {
+    if (passForm.oldPass !== settings.superAdminPass) {
       alert("বর্তমান পাসওয়ার্ডটি সঠিক নয়!");
       return;
     }
@@ -279,292 +397,479 @@ export default function App() {
       alert("নতুন পাসওয়ার্ড দুটি মিলছে না!");
       return;
     }
-    if (passForm.newPass.length < 4) {
-      alert("পাসওয়ার্ড অন্তত ৪ অক্ষরের হতে হবে!");
-      return;
-    }
 
-    setSettings({ ...settings, adminPass: passForm.newPass });
+    setSettings({ ...settings, superAdminPass: passForm.newPass });
     setPassForm({ oldPass: '', newPass: '', confirmPass: '' });
     alert("পাসওয়ার্ড সফলভাবে আপডেট করা হয়েছে!");
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 pb-20">
-      
-      <header className="bg-white shadow-sm border-b sticky top-0 z-20 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setActiveTab('home')}>
-          <span className="text-2xl">🛍️</span>
-          <h1 className="text-xl font-bold text-purple-700">{settings.storeName}</h1>
-        </div>
-        <button 
-          onClick={() => setActiveTab('admin')} 
-          className="text-xs bg-purple-100 text-purple-700 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"
-        >
-          👤 Admin
-        </button>
-      </header>
-
-      {activeTab === 'home' && (
-        <main>
-          <div className="p-3 bg-white border-b">
-            <input 
-              type="text" 
-              placeholder="🔍 প্রোডাক্ট খুঁজুন..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-gray-100 rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-purple-500"
-            />
+    <div className="min-h-screen bg-gray-50 text-gray-800 pb-20 flex flex-col justify-between">
+      <div>
+        <header className="bg-white shadow-sm border-b sticky top-0 z-20 px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setActiveTab('home')}>
+            <span className="text-2xl">🛍️</span>
+            <h1 className="text-xl font-bold text-purple-700">{settings.storeName}</h1>
           </div>
-
-          <div className="p-3">
-            <div className={`bg-gradient-to-r ${settings.bannerBgColor} text-white p-4 rounded-2xl shadow-md`}>
-              <h2 className="text-lg font-bold mb-1">{settings.bannerTitle}</h2>
-              <p className="text-xs opacity-90">{settings.bannerSubtitle}</p>
-            </div>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setActiveTab('profile')} 
+              className="text-xs bg-gray-100 text-gray-700 font-bold px-2.5 py-1.5 rounded-lg"
+            >
+              👤 Profile
+            </button>
+            <button 
+              onClick={() => setActiveTab('admin')} 
+              className="text-xs bg-purple-100 text-purple-700 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"
+            >
+              🔑 Admin
+            </button>
           </div>
+        </header>
 
-          <div className="px-3 mb-3 flex gap-2 overflow-x-auto pb-1">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition ${
-                  selectedCategory === cat 
-                    ? 'bg-purple-700 text-white' 
-                    : 'bg-white text-gray-600 border border-gray-200'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          <div className="px-3">
-            <h3 className="text-xs font-bold text-gray-700 mb-2">সকল প্রোডাক্ট ({filteredProducts.length})</h3>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-              {filteredProducts.map((product) => (
-                <div key={product.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col justify-between">
-                  <div onClick={() => { setViewProductDetails(product); setActiveImageIndex(0); }} className="cursor-pointer">
-                    <img 
-                      src={product.images && product.images.length > 0 ? product.images[0] : product.image} 
-                      alt={product.name} 
-                      className="w-full h-36 object-cover" 
-                    />
-                    <div className="p-2.5">
-                      <h4 className="font-semibold text-xs line-clamp-2 text-gray-800 leading-snug hover:text-purple-700">
-                        {product.name}
-                      </h4>
-                      <div className="mt-2 flex items-baseline justify-between">
-                        <span className="text-sm font-bold text-purple-700">৳ {product.price}</span>
-                        {product.images && product.images.length > 1 && (
-                          <span className="text-[10px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded font-semibold">
-                            {product.images.length} Colors
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="p-2 pt-0">
-                    <button
-                      onClick={() => openOrderModal(product)}
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 rounded-lg transition text-center"
-                    >
-                      Order Now
-                    </button>
-                  </div>
-                </div>
-              ))}
+        {activeTab === 'home' && (
+          <main>
+            <div className="p-3 bg-white border-b">
+              <input 
+                type="text" 
+                placeholder="🔍 প্রোডাক্ট খুঁজুন..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-gray-100 rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
             </div>
-          </div>
-        </main>
-      )}
 
-      {activeTab === 'orders' && (
-        <main className="p-4 max-w-md mx-auto">
-          <h2 className="text-base font-bold mb-3 text-gray-800">📦 আমার অর্ডারসমূহ</h2>
-          {orders.length === 0 ? (
-            <div className="text-center py-8 bg-white rounded-xl border text-xs text-gray-500">
-              কোনো অর্ডার ইতিহাস পাওয়া যায়নি।
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {orders.map((ord) => (
-                <div key={ord.id} className="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-                  <div className="flex justify-between items-start border-b pb-1.5 mb-1.5">
-                    <div>
-                      <span className="text-xs font-bold text-purple-700">{ord.id}</span>
-                      <p className="text-[10px] text-gray-400">{ord.date}</p>
-                    </div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
-                      ● {ord.status}
-                    </span>
-                  </div>
-                  <h4 className="font-semibold text-xs text-gray-800">{ord.productName}</h4>
-                  <p className="text-xs text-gray-600 mt-1">মোট: ৳{ord.totalAmount} ({ord.paymentMethod})</p>
+            <div className="p-3">
+              {settings.bannerImage ? (
+                <div className="relative rounded-2xl overflow-hidden shadow-md h-36">
+                  <img src={settings.bannerImage} alt="Banner" className="w-full h-full object-cover" />
                 </div>
-              ))}
-            </div>
-          )}
-        </main>
-      )}
-          {activeTab === 'admin' && (
-        <main className="p-4 max-w-2xl mx-auto">
-          {!isAdminLoggedIn ? (
-            <div className="bg-white p-5 rounded-2xl shadow-md border max-w-sm mx-auto mt-6">
-              <div className="text-center mb-4">
-                <span className="text-3xl">🔑</span>
-                <h3 className="text-base font-bold mt-1">Admin Login</h3>
-                <p className="text-xs text-gray-500">{settings.adminUser}</p>
-              </div>
-              <form onSubmit={handleAdminLogin} className="space-y-3">
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Username</label>
-                  <input 
-                    type="text" 
-                    placeholder="Username" 
-                    value={adminUsernameInput}
-                    onChange={(e) => setAdminUsernameInput(e.target.value)}
-                    className="w-full border rounded-xl p-2 text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Password</label>
-                  <input 
-                    type="password" 
-                    placeholder="••••••••" 
-                    value={adminPasswordInput}
-                    onChange={(e) => setAdminPasswordInput(e.target.value)}
-                    className="w-full border rounded-xl p-2 text-xs"
-                  />
-                </div>
-                <button type="submit" className="w-full bg-purple-700 text-white font-bold py-2 rounded-xl text-xs">
-                  Login
-                </button>
-              </form>
-            </div>
-          ) : (
-            <div>
-              <div className="flex justify-between items-center mb-4 bg-purple-900 text-white p-3.5 rounded-xl">
-                <div>
-                  <h2 className="font-bold text-sm">Admin Dashboard</h2>
-                  <p className="text-[10px] opacity-80">{settings.adminUser}</p>
-                </div>
-                <button 
-                  onClick={() => setIsAdminLoggedIn(false)} 
-                  className="bg-purple-800 hover:bg-purple-700 px-2.5 py-1 rounded text-xs"
-                >
-                  Logout
-                </button>
-              </div>
-
-              <div className="flex gap-1.5 mb-4 border-b pb-2 overflow-x-auto">
-                {['dashboard', 'orders', 'products', 'categories', 'settings'].map(tab => (
-                  <button 
-                    key={tab}
-                    onClick={() => setAdminSection(tab)}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold capitalize whitespace-nowrap ${
-                      adminSection === tab ? 'bg-purple-700 text-white' : 'bg-white border'
-                    }`}
-                  >
-                    {tab === 'orders' ? `Orders (${orders.length})` : tab === 'products' ? `Products (${products.length})` : tab}
-                  </button>
-                ))}
-              </div>
-
-              {adminSection === 'dashboard' && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white p-3 rounded-xl border">
-                    <span className="text-[11px] text-gray-500">Total Orders</span>
-                    <h3 className="text-lg font-bold text-gray-800">{orders.length}</h3>
-                  </div>
-                  <div className="bg-white p-3 rounded-xl border">
-                    <span className="text-[11px] text-gray-500">Pending Orders</span>
-                    <h3 className="text-lg font-bold text-amber-600">{orders.filter(o => o.status === 'Pending').length}</h3>
-                  </div>
-                  <div className="bg-white p-3 rounded-xl border col-span-2">
-                    <span className="text-[11px] text-gray-500">Total Sales</span>
-                    <h3 className="text-lg font-bold text-emerald-600">৳ {orders.reduce((sum, o) => sum + o.totalAmount, 0)}</h3>
-                  </div>
+              ) : (
+                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 rounded-2xl shadow-md">
+                  <h2 className="text-lg font-bold mb-1">{settings.bannerTitle}</h2>
+                  <p className="text-xs opacity-90">{settings.bannerSubtitle}</p>
                 </div>
               )}
+            </div>
 
-              {adminSection === 'orders' && (
-                <div className="space-y-3">
-                  {orders.length === 0 ? (
-                    <p className="text-xs text-gray-500 bg-white p-3 rounded-xl border text-center">কোনো অর্ডার নেই</p>
-                  ) : (
-                    orders.map((ord) => (
-                      <div key={ord.id} className="bg-white p-3.5 rounded-xl border space-y-2 text-xs">
-                        <div className="flex justify-between items-center border-b pb-1.5">
-                          <span className="font-bold text-purple-700">{ord.id}</span>
-                          <div className="flex items-center gap-2">
-                            <select 
-                              value={ord.status}
-                              onChange={(e) => updateOrderStatus(ord.id, e.target.value)}
-                              className="text-xs font-bold border rounded p-1 bg-gray-50"
-                            >
-                              <option value="Pending">Pending</option>
-                              <option value="Confirmed">Confirmed</option>
-                              <option value="Processing">Processing</option>
-                              <option value="Shipped">Shipped</option>
-                              <option value="Delivered">Delivered</option>
-                            </select>
-                            <button onClick={() => deleteOrder(ord.id)} className="text-red-600 font-bold bg-red-50 hover:bg-red-100 p-1 rounded">
-                              🗑️
-                            </button>
-                          </div>
+            <div className="px-3 mb-3 flex gap-2 overflow-x-auto pb-1">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition ${
+                    selectedCategory === cat 
+                      ? 'bg-purple-700 text-white' 
+                      : 'bg-white text-gray-600 border border-gray-200'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            <div className="px-3">
+              <h3 className="text-xs font-bold text-gray-700 mb-2">সকল প্রোডাক্ট ({filteredProducts.length})</h3>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+                {filteredProducts.map((product) => (
+                  <div key={product.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col justify-between">
+                    <div onClick={() => { setViewProductDetails(product); setActiveImageIndex(0); }} className="cursor-pointer">
+                      <img 
+                        src={product.images && product.images.length > 0 ? product.images[0] : "https://via.placeholder.com/150"} 
+                        alt={product.name} 
+                        className="w-full h-36 object-cover" 
+                      />
+                      <div className="p-2.5">
+                        <h4 className="font-semibold text-xs line-clamp-2 text-gray-800 leading-snug hover:text-purple-700">
+                          {product.name}
+                        </h4>
+                        
+                        <div className="flex items-center gap-1 mt-1 text-[11px] text-amber-500 font-bold">
+                          ★ {product.rating || 5.0} <span className="text-gray-400 font-normal">({product.reviewsCount || 0})</span>
                         </div>
 
-                        <p><strong>প্রোডাক্ট:</strong> {ord.productName}</p>
-                        <p><strong>সাইজ:</strong> {ord.size}</p>
-                        <p><strong>কাস্টমার:</strong> {ord.customerName} ({ord.mobile})</p>
-                        <p><strong>ঠিকানা:</strong> {ord.address}</p>
-                        <p><strong>পেমেন্ট:</strong> {ord.paymentMethod} | <strong>TrxID:</strong> <span className="bg-yellow-100 font-bold px-1.5 py-0.5 rounded">{ord.trxId}</span></p>
-
-                        {ord.paymentScreenshot && (
-                          <div className="mt-2 bg-gray-50 p-2 rounded border">
-                            <p className="font-bold text-[11px] text-gray-700 mb-1">পেমেন্ট স্ক্রিনশট:</p>
-                            <a href={ord.paymentScreenshot} target="_blank" rel="noreferrer">
-                              <img src={ord.paymentScreenshot} alt="Trx Screenshot" className="w-24 h-24 object-cover rounded border hover:opacity-90" />
-                            </a>
+                        <div className="mt-2 flex items-baseline justify-between">
+                          <div>
+                            <span className="text-sm font-bold text-purple-700">৳ {product.price}</span>
+                            {product.regularPrice > product.price && (
+                              <span className="text-[10px] text-gray-400 line-through ml-1.5">৳ {product.regularPrice}</span>
+                            )}
                           </div>
-                        )}
-
-                        <p className="font-bold text-emerald-700 text-sm border-t pt-1">মোট: ৳{ord.totalAmount}</p>
+                          {product.images && product.images.length > 1 && (
+                            <span className="text-[10px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded font-semibold">
+                              {product.images.length} Colors
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    ))
-                  )}
+                    </div>
+                    
+                    <div className="p-2 pt-0">
+                      <button
+                        onClick={() => openOrderModal(product)}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 rounded-lg transition text-center"
+                      >
+                        Order Now
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </main>
+        )}
+                    {activeTab === 'profile' && (
+          <main className="p-4 max-w-md mx-auto">
+            {!customerUser ? (
+              <div className="bg-white p-5 rounded-2xl shadow-md border text-xs">
+                <div className="flex justify-around border-b pb-2 mb-4">
+                  <button 
+                    onClick={() => setIsCustomerAuthMode('login')}
+                    className={`font-bold pb-1 ${isCustomerAuthMode === 'login' ? 'text-purple-700 border-b-2 border-purple-700' : 'text-gray-500'}`}
+                  >
+                    লগইন করুন
+                  </button>
+                  <button 
+                    onClick={() => setIsCustomerAuthMode('signup')}
+                    className={`font-bold pb-1 ${isCustomerAuthMode === 'signup' ? 'text-purple-700 border-b-2 border-purple-700' : 'text-gray-500'}`}
+                  >
+                    রেজিস্ট্রেশন করুন
+                  </button>
                 </div>
-              )}
 
-              {adminSection === 'products' && (
-                <div className="space-y-4">
-                  <form onSubmit={handleAddProduct} className="bg-white p-3.5 rounded-xl border space-y-2 text-xs">
-                    <h3 className="font-bold border-b pb-1">নতুন প্রোডাক্ট যুক্ত করুন</h3>
+                <form onSubmit={handleCustomerAuth} className="space-y-3">
+                  {isCustomerAuthMode === 'signup' && (
+                    <div>
+                      <label className="block font-semibold mb-1">আপনার নাম</label>
+                      <input 
+                        type="text" 
+                        required 
+                        value={customerForm.name}
+                        onChange={(e) => setCustomerForm({ ...customerForm, name: e.target.value })}
+                        className="w-full border rounded-xl p-2"
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block font-semibold mb-1">মোবাইল নম্বর</label>
+                    <input 
+                      type="tel" 
+                      required 
+                      value={customerForm.mobile}
+                      onChange={(e) => setCustomerForm({ ...customerForm, mobile: e.target.value })}
+                      className="w-full border rounded-xl p-2"
+                    />
+                  </div>
+
+                  {isCustomerAuthMode === 'signup' && (
+                    <div>
+                      <label className="block font-semibold mb-1">সম্পূর্ণ ঠিকানা</label>
+                      <input 
+                        type="text" 
+                        value={customerForm.address}
+                        onChange={(e) => setCustomerForm({ ...customerForm, address: e.target.value })}
+                        className="w-full border rounded-xl p-2"
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block font-semibold mb-1">পাসওয়ার্ড</label>
+                    <input 
+                      type="password" 
+                      required 
+                      value={customerForm.password}
+                      onChange={(e) => setCustomerForm({ ...customerForm, password: e.target.value })}
+                      className="w-full border rounded-xl p-2"
+                    />
+                  </div>
+
+                  <button type="submit" className="w-full bg-purple-700 text-white font-bold py-2 rounded-xl">
+                    {isCustomerAuthMode === 'login' ? 'Login' : 'Sign Up'}
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <div className="bg-white p-4 rounded-2xl shadow-sm border text-xs space-y-3">
+                <div className="flex justify-between items-center border-b pb-2">
+                  <h3 className="font-bold text-sm text-purple-800">👤 কাস্টমার প্রোফাইল</h3>
+                  <button onClick={() => setCustomerUser(null)} className="text-red-500 font-bold bg-red-50 px-2 py-1 rounded">Logout</button>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-gray-600 mb-1">নাম:</label>
+                  <input 
+                    type="text" 
+                    value={customerUser.name}
+                    onChange={(e) => setCustomerUser({ ...customerUser, name: e.target.value })}
+                    className="w-full border rounded p-1.5"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-gray-600 mb-1">মোবাইল:</label>
+                  <input 
+                    type="text" 
+                    value={customerUser.mobile}
+                    onChange={(e) => setCustomerUser({ ...customerUser, mobile: e.target.value })}
+                    className="w-full border rounded p-1.5"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-gray-600 mb-1">ঠিকানা:</label>
+                  <textarea 
+                    value={customerUser.address}
+                    onChange={(e) => setCustomerUser({ ...customerUser, address: e.target.value })}
+                    className="w-full border rounded p-1.5"
+                    rows="2"
+                  ></textarea>
+                </div>
+
+                <p className="text-[10px] text-emerald-600 font-bold">✓ প্রোফাইল তথ্য স্বয়ংক্রিয়ভাবে সেভ হবে।</p>
+              </div>
+            )}
+          </main>
+        )}
+
+        {activeTab === 'orders' && (
+          <main className="p-4 max-w-md mx-auto">
+            <h2 className="text-base font-bold mb-3 text-gray-800">📦 আমার ট্র্যাকিং ও অর্ডার ইতিহাস</h2>
+            {orders.length === 0 ? (
+              <div className="text-center py-8 bg-white rounded-xl border text-xs text-gray-500">
+                কোনো অর্ডার ইতিহাস পাওয়া যায়নি।
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {orders.map((ord) => (
+                  <div key={ord.id} className="bg-white p-3.5 rounded-xl shadow-sm border border-gray-100 text-xs space-y-2">
+                    <div className="flex justify-between items-start border-b pb-1.5">
+                      <div>
+                        <span className="font-bold text-purple-700">{ord.id}</span>
+                        <p className="text-[10px] text-gray-400">{ord.date}</p>
+                      </div>
+                      <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full text-white ${
+                        ord.status === 'Pending' ? 'bg-red-600' : 'bg-emerald-600'
+                      }`}>
+                        {ord.status}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2.5">
+                      {ord.productImage && (
+                        <img src={ord.productImage} alt="Product" className="w-12 h-12 object-cover rounded-lg border" />
+                      )}
+                      <div>
+                        <h4 className="font-semibold text-gray-800 leading-tight">{ord.productName}</h4>
+                        <p className="text-[11px] text-gray-500 mt-0.5">সাইজ: {ord.size} | মোট: ৳{ord.totalAmount}</p>
+                      </div>
+                    </div>
+
+                    <div className="bg-purple-50 p-2 rounded-lg border border-purple-100 space-y-1 text-[11px]">
+                      <p><strong>📦 প্যাকেজিং স্ট্যাটাস:</strong> <span className="text-purple-700 font-bold">{ord.packingStatus || 'Processing'}</span></p>
+                      <p><strong>🚚 আনুমানিক ডেলিভারি সময়:</strong> <span className="text-purple-700 font-bold">{ord.estimatedDelivery || '3-5 Days'}</span></p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </main>
+        )}
+
+        {activeTab === 'admin' && (
+          <main className="p-4 max-w-2xl mx-auto">
+            {!isAdminLoggedIn ? (
+              <div className="bg-white p-5 rounded-2xl shadow-md border max-w-sm mx-auto mt-6">
+                <div className="text-center mb-4">
+                  <span className="text-3xl">🔑</span>
+                  <h3 className="text-base font-bold mt-1">Admin Login</h3>
+                  <p className="text-xs text-gray-500">{settings.superAdminUser}</p>
+                </div>
+                <form onSubmit={handleAdminLogin} className="space-y-3 text-xs">
+                  <div>
+                    <label className="block font-semibold mb-1">Username</label>
+                    <input 
+                      type="text" 
+                      placeholder="Username" 
+                      value={adminUsernameInput}
+                      onChange={(e) => setAdminUsernameInput(e.target.value)}
+                      className="w-full border rounded-xl p-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold mb-1">Password</label>
+                    <input 
+                      type="password" 
+                      placeholder="••••••••" 
+                      value={adminPasswordInput}
+                      onChange={(e) => setAdminPasswordInput(e.target.value)}
+                      className="w-full border rounded-xl p-2"
+                    />
+                  </div>
+                  <button type="submit" className="w-full bg-purple-700 text-white font-bold py-2 rounded-xl">
+                    Login
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <div>
+                <div className="flex justify-between items-center mb-4 bg-purple-900 text-white p-3.5 rounded-xl">
+                  <div>
+                    <h2 className="font-bold text-sm">Admin Dashboard</h2>
+                    <p className="text-[10px] opacity-80">{loggedInAdminUser}</p>
+                  </div>
+                  <button 
+                    onClick={() => setIsAdminLoggedIn(false)} 
+                    className="bg-purple-800 hover:bg-purple-700 px-2.5 py-1 rounded text-xs"
+                  >
+                    Logout
+                  </button>
+                </div>
+
+                <div className="flex gap-1.5 mb-4 border-b pb-2 overflow-x-auto">
+                  {['dashboard', 'orders', 'products', 'categories', 'settings'].map(tab => (
+                    <button 
+                      key={tab}
+                      onClick={() => setAdminSection(tab)}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold capitalize whitespace-nowrap ${
+                        adminSection === tab ? 'bg-purple-700 text-white' : 'bg-white border'
+                      }`}
+                    >
+                      {tab === 'orders' ? `Orders (${orders.length})` : tab === 'products' ? `Products (${products.length})` : tab}
+                    </button>
+                  ))}
+                </div>
+
+                {adminSection === 'dashboard' && (
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="bg-white p-3 rounded-xl border">
+                      <span className="text-gray-500">Total Orders</span>
+                      <h3 className="text-lg font-bold text-gray-800">{orders.length}</h3>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border">
+                      <span className="text-gray-500">Pending Orders</span>
+                      <h3 className="text-lg font-bold text-red-600">{orders.filter(o => o.status === 'Pending').length}</h3>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border col-span-2">
+                      <span className="text-gray-500">Total Sales</span>
+                      <h3 className="text-lg font-bold text-emerald-600">৳ {orders.reduce((sum, o) => sum + o.totalAmount, 0)}</h3>
+                    </div>
+                  </div>
+                )}
+
+                {adminSection === 'orders' && (
+                  <div className="space-y-3">
+                    {orders.length === 0 ? (
+                      <p className="text-xs text-gray-500 bg-white p-3 rounded-xl border text-center">কোনো অর্ডার নেই</p>
+                    ) : (
+                      orders.map((ord) => (
+                        <div key={ord.id} className="bg-white p-3.5 rounded-xl border space-y-2 text-xs">
+                          <div className="flex justify-between items-center border-b pb-1.5">
+                            <span className="font-bold text-purple-700">{ord.id}</span>
+                            <div className="flex items-center gap-2">
+                              <select 
+                                value={ord.status}
+                                onChange={(e) => updateOrderStatus(ord.id, e.target.value)}
+                                className={`text-xs font-bold border rounded p-1 text-white ${
+                                  ord.status === 'Pending' ? 'bg-red-600' : 'bg-emerald-600'
+                                }`}
+                              >
+                                <option value="Pending" className="bg-white text-black">Pending (লাল)</option>
+                                <option value="Confirmed" className="bg-white text-black">Confirmed (সবুজ)</option>
+                                <option value="Shipped" className="bg-white text-black">Shipped (সবুজ)</option>
+                                <option value="Delivered" className="bg-white text-black">Delivered (সবুজ)</option>
+                              </select>
+                              <button onClick={() => deleteOrder(ord.id)} className="text-red-600 font-bold bg-red-50 hover:bg-red-100 p-1 rounded">
+                                🗑️
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2.5 items-center">
+                            {ord.productImage && (
+                              <img src={ord.productImage} alt="Order Product" className="w-14 h-14 object-cover rounded-lg border" />
+                            )}
+                            <div>
+                              <p><strong>প্রোডাক্ট:</strong> {ord.productName}</p>
+                              <p><strong>সাইজ:</strong> {ord.size}</p>
+                            </div>
+                          </div>
+
+                          <p><strong>কাস্টমার:</strong> {ord.customerName} ({ord.mobile})</p>
+                          <p><strong>ঠিকানা:</strong> {ord.address}</p>
+                          <p><strong>পেমেন্ট:</strong> {ord.paymentMethod} | <strong>TrxID:</strong> <span className="bg-yellow-100 font-bold px-1.5 py-0.5 rounded">{ord.trxId}</span></p>
+
+                          <div className="bg-gray-50 p-2 rounded border space-y-1">
+                            <p className="font-bold text-gray-700">কাস্টমার ট্র্যাকিং আপডেট:</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              <input 
+                                type="text" 
+                                placeholder="প্যাকেজিং স্ট্যাটাস"
+                                value={ord.packingStatus || ''}
+                                onChange={(e) => updateOrderDeliveryDetails(ord.id, e.target.value, ord.estimatedDelivery)}
+                                className="border p-1 rounded text-xs bg-white"
+                              />
+                              <input 
+                                type="text" 
+                                placeholder="ডেলিভারি সময়"
+                                value={ord.estimatedDelivery || ''}
+                                onChange={(e) => updateOrderDeliveryDetails(ord.id, ord.packingStatus, e.target.value)}
+                                className="border p-1 rounded text-xs bg-white"
+                              />
+                            </div>
+                          </div>
+
+                          {ord.paymentScreenshot && (
+                            <div className="mt-2 bg-gray-50 p-2 rounded border">
+                              <p className="font-bold text-[11px] text-gray-700 mb-1">পেমেন্ট স্ক্রিনশট:</p>
+                              <a href={ord.paymentScreenshot} target="_blank" rel="noreferrer">
+                                <img src={ord.paymentScreenshot} alt="Trx Screenshot" className="w-24 h-24 object-cover rounded border hover:opacity-90" />
+                              </a>
+                            </div>
+                          )}
+
+                          <p className="font-bold text-emerald-700 text-sm border-t pt-1">মোট: ৳{ord.totalAmount}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+                            {adminSection === 'products' && (
+                <div className="space-y-4 text-xs">
+                  <form onSubmit={handleSaveProduct} className="bg-white p-3.5 rounded-xl border space-y-2">
+                    <h3 className="font-bold border-b pb-1 text-purple-800">
+                      {editingProductId ? "✏️ প্রোডাক্ট এডিট করুন" : "➕ নতুন প্রোডাক্ট যুক্ত করুন"}
+                    </h3>
                     
                     <input 
                       type="text" 
                       placeholder="প্রোডাক্ট নাম" 
-                      value={newProduct.name}
-                      onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                      value={productForm.name}
+                      onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
                       className="border p-2 rounded w-full"
                       required
                     />
 
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       <input 
                         type="number" 
-                        placeholder="দাম (৳)" 
-                        value={newProduct.price}
-                        onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                        placeholder="আগের দাম (৳)" 
+                        value={productForm.regularPrice}
+                        onChange={(e) => setProductForm({ ...productForm, regularPrice: e.target.value })}
+                        className="border p-2 rounded"
+                      />
+                      <input 
+                        type="number" 
+                        placeholder="অফার দাম (৳)" 
+                        value={productForm.price}
+                        onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
                         className="border p-2 rounded"
                         required
                       />
                       <select 
-                        value={newProduct.category}
-                        onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
+                        value={productForm.category}
+                        onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
                         className="border p-2 rounded bg-white"
                       >
                         {categories.filter(c => c !== 'All').map(c => (
@@ -574,65 +879,68 @@ export default function App() {
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-600 mb-1">একাধিক ছবি (৪-৫টি কালার/ভিউ) সিলেক্ট করুন:</label>
+                      <label className="block font-bold text-gray-600 mb-1">ছবি সিলেক্ট করুন (একাধিক):</label>
                       <input 
                         type="file" 
                         accept="image/*"
                         multiple
                         onChange={handleMultipleImagesUpload}
-                        className="border p-1.5 rounded w-full bg-gray-50 text-xs"
+                        className="border p-1.5 rounded w-full bg-gray-50"
                       />
                     </div>
 
-                    {newProduct.images.length > 0 && (
+                    {productForm.images.length > 0 && (
                       <div className="flex gap-2 overflow-x-auto my-2 p-1 bg-gray-50 rounded border">
-                        {newProduct.images.map((img, idx) => (
+                        {productForm.images.map((img, idx) => (
                           <img key={idx} src={img} alt="Preview" className="w-12 h-12 object-cover rounded border" />
                         ))}
                       </div>
                     )}
 
                     <textarea 
-                      placeholder="প্রোডাক্টের বিবরণ (Description)..." 
-                      value={newProduct.description}
-                      onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                      placeholder="বিবরণ (লাইন বাই লাইন লিখুন)..." 
+                      value={productForm.description}
+                      onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
                       className="border p-2 rounded w-full"
-                      rows="2"
+                      rows="4"
                     ></textarea>
 
                     <div className="grid grid-cols-2 gap-2">
                       <input 
                         type="text" 
                         placeholder="সাইজসমূহ (যেমন: M, L, XL)" 
-                        value={newProduct.sizes}
-                        onChange={(e) => setNewProduct({ ...newProduct, sizes: e.target.value })}
+                        value={productForm.sizes}
+                        onChange={(e) => setProductForm({ ...productForm, sizes: e.target.value })}
                         className="border p-2 rounded"
                       />
                       <input 
                         type="number" 
                         placeholder="স্টক পরিমাণ" 
-                        value={newProduct.stock}
-                        onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
+                        value={productForm.stock}
+                        onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
                         className="border p-2 rounded"
                       />
                     </div>
 
                     <button type="submit" className="bg-emerald-600 text-white font-bold py-2 rounded w-full">
-                      সেভ করুন
+                      {editingProductId ? "আপডেট করুন" : "সেভ করুন"}
                     </button>
                   </form>
 
                   <div className="space-y-2">
                     {products.map((p) => (
-                      <div key={p.id} className="bg-white p-2.5 rounded-xl border flex items-center justify-between text-xs">
+                      <div key={p.id} className="bg-white p-2.5 rounded-xl border flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <img src={p.images && p.images.length > 0 ? p.images[0] : p.image} alt={p.name} className="w-8 h-8 object-cover rounded" />
+                          <img src={p.images && p.images.length > 0 ? p.images[0] : ''} alt={p.name} className="w-10 h-10 object-cover rounded" />
                           <div>
-                            <span className="font-semibold line-clamp-1">{p.name} - ৳{p.price}</span>
-                            <span className="text-[10px] text-gray-400">{p.images?.length || 1} Images</span>
+                            <span className="font-semibold line-clamp-1">{p.name}</span>
+                            <span className="text-[10px] text-purple-700 font-bold">৳{p.price}</span>
                           </div>
                         </div>
-                        <button onClick={() => deleteProduct(p.id)} className="text-red-500 font-bold px-2">✕</button>
+                        <div className="flex items-center gap-1">
+                          <button onClick={() => handleEditProductClick(p)} className="bg-blue-50 text-blue-600 font-bold px-2 py-1 rounded">✏️ Edit</button>
+                          <button onClick={() => deleteProduct(p.id)} className="bg-red-50 text-red-500 font-bold px-2 py-1 rounded">✕ Delete</button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -640,16 +948,16 @@ export default function App() {
               )}
 
               {adminSection === 'categories' && (
-                <div className="space-y-4">
-                  <form onSubmit={handleAddCategory} className="bg-white p-3 rounded-xl border space-y-2 text-xs">
+                <div className="space-y-4 text-xs">
+                  <form onSubmit={handleAddCategory} className="bg-white p-3 rounded-xl border space-y-2">
                     <h3 className="font-bold">নতুন ক্যাটাগরি যুক্ত করুন</h3>
                     <div className="flex gap-2">
                       <input 
                         type="text" 
-                        placeholder="ক্যাটাগরি নাম (যেমন: Winter Collection)" 
+                        placeholder="ক্যাটাগরি নাম" 
                         value={newCatName}
                         onChange={(e) => setNewCatName(e.target.value)}
-                        className="border p-2 rounded w-full text-xs"
+                        className="border p-2 rounded w-full"
                         required
                       />
                       <button type="submit" className="bg-purple-700 text-white font-bold px-4 py-2 rounded whitespace-nowrap">
@@ -658,7 +966,7 @@ export default function App() {
                     </div>
                   </form>
 
-                  <div className="bg-white p-3 rounded-xl border text-xs space-y-2">
+                  <div className="bg-white p-3 rounded-xl border space-y-2">
                     <h4 className="font-bold border-b pb-1">বিদ্যমান ক্যাটাগরিসমূহ:</h4>
                     {categories.map((cat) => (
                       <div key={cat} className="flex justify-between items-center py-1 border-b last:border-b-0">
@@ -686,79 +994,90 @@ export default function App() {
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold mb-1">ব্যানার শিরোনাম</label>
+                      <label className="block font-semibold mb-1">হোমপেজ ব্যানার ছবি আপলোড করুন:</label>
                       <input 
-                        type="text" 
-                        value={settings.bannerTitle} 
-                        onChange={(e) => setSettings({ ...settings, bannerTitle: e.target.value })}
-                        className="w-full border rounded p-2"
+                        type="file" 
+                        accept="image/*"
+                        onChange={handleBannerUpload}
+                        className="w-full border p-1 rounded bg-gray-50"
                       />
-                    </div>
-                    <div>
-                      <label className="block font-semibold mb-1">ব্যানার উপ-শিরোনাম</label>
-                      <input 
-                        type="text" 
-                        value={settings.bannerSubtitle} 
-                        onChange={(e) => setSettings({ ...settings, bannerSubtitle: e.target.value })}
-                        className="w-full border rounded p-2"
-                      />
+                      {settings.bannerImage && (
+                        <button 
+                          onClick={() => setSettings({ ...settings, bannerImage: '' })}
+                          className="mt-1 text-red-500 text-[10px] font-bold"
+                        >
+                          ✕ ব্যানার মুছে ফেলুন
+                        </button>
+                      )}
                     </div>
                   </div>
 
                   <div className="bg-white p-3.5 rounded-xl border space-y-2">
+                    <h3 className="font-bold border-b pb-1 text-sm text-red-700">🧊 অ্যাডমিন ফ্রিজ ও কন্ট্রোল (Admin Control)</h3>
+                    {admins.map((adm) => (
+                      <div key={adm.username} className="flex justify-between items-center bg-gray-50 p-2 rounded border">
+                        <div>
+                          <span className="font-bold">{adm.username}</span> ({adm.role})
+                          {adm.isFrozen && <span className="ml-2 text-red-600 font-bold text-[10px]">[Frozen]</span>}
+                        </div>
+                        {adm.username !== settings.superAdminUser && (
+                          <button 
+                            onClick={() => toggleFreezeAdmin(adm.username)}
+                            className={`px-2.5 py-1 rounded text-[10px] font-bold text-white ${
+                              adm.isFrozen ? 'bg-emerald-600' : 'bg-red-600'
+                            }`}
+                          >
+                            {adm.isFrozen ? 'Restore / Unfreeze' : 'Freeze Admin'}
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="bg-white p-3.5 rounded-xl border space-y-2">
                     <h3 className="font-bold border-b pb-1 text-sm">পেমেন্ট নম্বর সেটিংস</h3>
-                    <div>
-                      <label className="block font-semibold mb-1">বিকাশ পার্সোনাল নম্বর</label>
+                    <div className="grid grid-cols-2 gap-2">
                       <input 
                         type="text" 
                         value={settings.bkashNumber} 
                         onChange={(e) => setSettings({ ...settings, bkashNumber: e.target.value })}
-                        className="w-full border rounded p-2"
+                        className="border rounded p-2"
                       />
-                    </div>
-                    <div>
-                      <label className="block font-semibold mb-1">নগদ পার্সোনাল নম্বর</label>
                       <input 
                         type="text" 
                         value={settings.nagadNumber} 
                         onChange={(e) => setSettings({ ...settings, nagadNumber: e.target.value })}
-                        className="w-full border rounded p-2"
+                        className="border rounded p-2"
                       />
                     </div>
                   </div>
 
                   <form onSubmit={handleChangePassword} className="bg-white p-3.5 rounded-xl border space-y-2">
-                    <h3 className="font-bold border-b pb-1 text-sm text-purple-800">🔐 অ্যাডমিন পাসওয়ার্ড পরিবর্তন</h3>
-                    <div>
-                      <label className="block font-semibold mb-1">বর্তমান পাসওয়ার্ড</label>
-                      <input 
-                        type="password" 
-                        required
-                        value={passForm.oldPass} 
-                        onChange={(e) => setPassForm({ ...passForm, oldPass: e.target.value })}
-                        className="w-full border rounded p-2"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold mb-1">নতুন পাসওয়ার্ড</label>
-                      <input 
-                        type="password" 
-                        required
-                        value={passForm.newPass} 
-                        onChange={(e) => setPassForm({ ...passForm, newPass: e.target.value })}
-                        className="w-full border rounded p-2"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-semibold mb-1">নতুন পাসওয়ার্ড পুনরায় নিশ্চিত করুন</label>
-                      <input 
-                        type="password" 
-                        required
-                        value={passForm.confirmPass} 
-                        onChange={(e) => setPassForm({ ...passForm, confirmPass: e.target.value })}
-                        className="w-full border rounded p-2"
-                      />
-                    </div>
+                    <h3 className="font-bold border-b pb-1 text-sm text-purple-800">🔐 পাসওয়ার্ড পরিবর্তন</h3>
+                    <input 
+                      type="password" 
+                      placeholder="বর্তমান পাসওয়ার্ড"
+                      required
+                      value={passForm.oldPass} 
+                      onChange={(e) => setPassForm({ ...passForm, oldPass: e.target.value })}
+                      className="w-full border rounded p-2"
+                    />
+                    <input 
+                      type="password" 
+                      placeholder="নতুন পাসওয়ার্ড"
+                      required
+                      value={passForm.newPass} 
+                      onChange={(e) => setPassForm({ ...passForm, newPass: e.target.value })}
+                      className="w-full border rounded p-2"
+                    />
+                    <input 
+                      type="password" 
+                      placeholder="পুনরায় পাসওয়ার্ড দিন"
+                      required
+                      value={passForm.confirmPass} 
+                      onChange={(e) => setPassForm({ ...passForm, confirmPass: e.target.value })}
+                      className="w-full border rounded p-2"
+                    />
                     <button type="submit" className="w-full bg-purple-700 text-white font-bold py-2 rounded-lg">
                       পাসওয়ার্ড আপডেট করুন
                     </button>
@@ -769,197 +1088,4 @@ export default function App() {
           )}
         </main>
       )}
-         {viewProductDetails && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3">
-          <div className="bg-white rounded-2xl max-w-md w-full p-4 relative max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-2 border-b pb-2">
-              <h3 className="text-sm font-bold text-gray-800">প্রোডাক্ট বিস্তারিত</h3>
-              <button onClick={() => setViewProductDetails(null)} className="text-gray-500 font-bold px-2">✕</button>
-            </div>
-
-            <img 
-              src={viewProductDetails.images && viewProductDetails.images.length > 0 ? viewProductDetails.images[activeImageIndex] : viewProductDetails.image} 
-              alt={viewProductDetails.name} 
-              className="w-full h-52 object-cover rounded-xl mb-2" 
-            />
-
-            {viewProductDetails.images && viewProductDetails.images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto mb-3 pb-1">
-                {viewProductDetails.images.map((img, idx) => (
-                  <img 
-                    key={idx} 
-                    src={img} 
-                    alt="Thumbnail" 
-                    onClick={() => setActiveImageIndex(idx)}
-                    className={`w-12 h-12 object-cover rounded-lg border-2 cursor-pointer ${activeImageIndex === idx ? 'border-purple-600 scale-105' : 'border-gray-200 opacity-70'}`}
-                  />
-                ))}
-              </div>
-            )}
-
-            <h2 className="text-base font-bold text-gray-800 mb-1">{viewProductDetails.name}</h2>
-            <p className="text-lg font-extrabold text-purple-700 mb-3">৳ {viewProductDetails.price}</p>
-
-            <div className="bg-gray-50 p-3 rounded-xl border mb-3 text-xs text-gray-600 space-y-1">
-              <p><strong>ক্যাটাগরি:</strong> {viewProductDetails.category}</p>
-              <p><strong>উপলব্ধ সাইজ:</strong> {viewProductDetails.sizes ? viewProductDetails.sizes.join(', ') : 'Standard'}</p>
-              <p className="mt-2"><strong>বিবরণ:</strong></p>
-              <p className="text-gray-700 leading-relaxed">{viewProductDetails.description}</p>
-            </div>
-
-            <button 
-              onClick={() => openOrderModal(viewProductDetails)}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md"
-            >
-              Order Now
-            </button>
-          </div>
-        </div>
-      )}
-
-      {selectedProduct && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3">
-          <div className="bg-white rounded-2xl max-w-md w-full p-4 relative max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-3 border-b pb-2">
-              <h3 className="text-base font-extrabold text-emerald-700">Confirm order.</h3>
-              <button onClick={() => setSelectedProduct(null)} className="text-gray-500 font-bold px-2">✕</button>
-            </div>
-
-            <form onSubmit={handleConfirmOrder} className="space-y-3 text-xs">
-              <div>
-                <label className="block font-bold mb-1">Products:</label>
-                <div className="bg-gray-100 p-2 rounded border font-medium">
-                  {selectedProduct.name}
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold mb-1">Your name:</label>
-                <input 
-                  type="text" 
-                  required
-                  placeholder="Enter your name."
-                  value={orderForm.name}
-                  onChange={(e) => setOrderForm({ ...orderForm, name: e.target.value })}
-                  className="w-full border rounded p-2"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold mb-1">Mobile number:</label>
-                <input 
-                  type="tel" 
-                  required
-                  placeholder="01XXXXXXXXX"
-                  value={orderForm.mobile}
-                  onChange={(e) => setOrderForm({ ...orderForm, mobile: e.target.value })}
-                  className="w-full border rounded p-2"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold mb-1">Full address:</label>
-                <textarea 
-                  required
-                  rows="2"
-                  placeholder="Example: Mirpur, Dhaka..."
-                  value={orderForm.address}
-                  onChange={(e) => setOrderForm({ ...orderForm, address: e.target.value })}
-                  className="w-full border rounded p-2"
-                ></textarea>
-              </div>
-
-              <div>
-                <label className="block font-bold mb-1">Select size:</label>
-                <select 
-                  value={orderForm.size} 
-                  onChange={(e) => setOrderForm({ ...orderForm, size: e.target.value })}
-                  className="w-full border rounded p-2 bg-white"
-                >
-                  {selectedProduct.sizes?.map((sz, idx) => (
-                    <option key={idx} value={sz}>{sz}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-bold mb-1">Select delivery area:</label>
-                <select 
-                  value={orderForm.deliveryArea} 
-                  onChange={(e) => setOrderForm({ ...orderForm, deliveryArea: e.target.value })}
-                  className="w-full border rounded p-2 bg-white"
-                >
-                  <option value="outside">Outside Dhaka — (charge: ৳120)</option>
-                  <option value="inside">Inside Dhaka — (charge: ৳60)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-bold mb-1">Payment method:</label>
-                <select 
-                  value={orderForm.paymentMethod} 
-                  onChange={(e) => setOrderForm({ ...orderForm, paymentMethod: e.target.value })}
-                  className="w-full border rounded p-2 bg-white"
-                >
-                  <option value="COD">Cash on Delivery (COD)</option>
-                  <option value="bKash">bKash Personal ({settings.bkashNumber})</option>
-                  <option value="Nagad">Nagad Personal ({settings.nagadNumber})</option>
-                </select>
-              </div>
-
-              {(orderForm.paymentMethod === 'bKash' || orderForm.paymentMethod === 'Nagad') && (
-                <div className="bg-purple-50 p-2.5 rounded-xl border border-purple-200 space-y-2">
-                  <p className="text-[11px] text-purple-800 font-semibold">
-                    দয়া করে <span className="font-bold">{settings[orderForm.paymentMethod.toLowerCase() + 'Number']}</span> নম্বরে টাকা পাঠিয়ে TrxID এবং স্ক্রিনশট দিন:
-                  </p>
-                  
-                  <input 
-                    type="text" 
-                    placeholder="Enter TrxID"
-                    value={orderForm.trxId}
-                    onChange={(e) => setOrderForm({ ...orderForm, trxId: e.target.value })}
-                    className="w-full border rounded p-1.5 bg-white text-xs font-mono"
-                    required
-                  />
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-600 mb-1">পেমেন্ট স্ক্রিনশট আপলোড করুন:</label>
-                    <input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={handleScreenshotUpload}
-                      className="w-full text-xs bg-white border p-1 rounded"
-                      required
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="border-2 border-dashed border-emerald-500 bg-emerald-50 p-2.5 rounded-xl text-center font-bold text-emerald-800">
-                Total: Tk {selectedProduct.price + (orderForm.deliveryArea === 'inside' ? 60 : 120)}
-              </div>
-
-              <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-xl shadow-md text-xs">
-                Confirm order.
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
-        <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center ${activeTab === 'home' ? 'text-purple-700 font-bold' : ''}`}>
-          <span>🛍️ Home</span>
-        </button>
-        <button onClick={() => setActiveTab('orders')} className={`flex flex-col items-center ${activeTab === 'orders' ? 'text-purple-700 font-bold' : ''}`}>
-          <span>📦 Orders</span>
-        </button>
-        <button onClick={() => setActiveTab('admin')} className={`flex flex-col items-center ${activeTab === 'admin' ? 'text-purple-700 font-bold' : ''}`}>
-          <span>👤 Admin</span>
-        </button>
-      </div>
-
-    </div>
-  );
-}
-                
+                          
