@@ -517,4 +517,9 @@ export default function App() {
             </div>
           </main>
         )}
-    
+
+        {activeTab === 'profile' && (
+          <main className="p-4 max-w-md mx-auto">
+            {!customerUser ? (
+              <div className="bg-white p-5 rounded-2xl shadow-md border text-xs">
+   
