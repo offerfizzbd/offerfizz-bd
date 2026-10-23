@@ -132,22 +132,6 @@ export default function App() {
     };
 
     setOrders([newOrder, ...orders]);
-
-    const message = `🛍️ *নতুন অর্ডার (OfferFizz BD)* 🛍️\n\n` +
-      `🆔 *অর্ডার আইডি:* ${newOrder.id}\n` +
-      `📦 *প্রোডাক্ট:* ${newOrder.productName}\n` +
-      `📏 *সাইজ:* ${newOrder.size}\n` +
-      `💰 *মূল্য:* Tk ${newOrder.productPrice}\n` +
-      `🚚 *ডেলিভারি চার্জ:* Tk ${deliveryCharge} (${orderForm.deliveryArea === 'inside' ? 'ঢাকার ভেতরে' : 'ঢাকার বাইরে'})\n` +
-      `💵 *সর্বমোট:* Tk ${totalAmount}\n\n` +
-      `👤 *নাম:* ${newOrder.customerName}\n` +
-      `📞 *মোবাইল:* ${newOrder.mobile}\n` +
-      `📍 *ঠিকানা:* ${newOrder.address}\n` +
-      `💳 *পেমেন্ট:* ${newOrder.paymentMethod} ${newOrder.trxId !== 'N/A' ? `(TrxID: ${newOrder.trxId})` : ''}`;
-
-    const whatsappUrl = `https://wa.me/8801700000000?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
-
     setSelectedProduct(null);
     alert("আপনার অর্ডারটি সফলভাবে গৃহীত হয়েছে! অর্ডার আইডি: " + newOrder.id);
   };
@@ -283,7 +267,7 @@ export default function App() {
           </div>
         </main>
       )}
-            {activeTab === 'orders' && (
+          {activeTab === 'orders' && (
         <main className="p-4 max-w-md mx-auto">
           <h2 className="text-base font-bold mb-3 text-gray-800">📦 আমার অর্ডারসমূহ</h2>
           {orders.length === 0 ? (
@@ -422,6 +406,7 @@ export default function App() {
                           </select>
                         </div>
                         <p><strong>প্রোডাক্ট:</strong> {ord.productName}</p>
+                        <p><strong>সাইজ:</strong> {ord.size}</p>
                         <p><strong>কাস্টমার:</strong> {ord.customerName} ({ord.mobile})</p>
                         <p><strong>ঠিকানা:</strong> {ord.address}</p>
                         <p><strong>পেমেন্ট:</strong> {ord.paymentMethod} | <strong>TrxID:</strong> <span className="bg-yellow-100 font-bold px-1">{ord.trxId}</span></p>
@@ -695,5 +680,5 @@ export default function App() {
 
     </div>
   );
- }
-                    
+}
+              
