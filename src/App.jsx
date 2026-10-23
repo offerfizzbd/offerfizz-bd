@@ -40,8 +40,8 @@ const INITIAL_SETTINGS = {
   contactEmail: "support@offerfizzbd.com",
   facebookUrl: "https://facebook.com",
   whatsappUrl: "https://wa.me/8801700000000",
-  superAdminUser: "Md Jewel",
-  superAdminPass: "Jewel@338"
+  superAdminUser: "admin",
+  superAdminPass: "1234"
 };
 
 const INITIAL_CATEGORIES = ['All', 'Fashion', 'Gadgets', 'Electronics', 'Beauty'];
@@ -49,9 +49,9 @@ const INITIAL_CATEGORIES = ['All', 'Fashion', 'Gadgets', 'Electronics', 'Beauty'
 export default function App() {
   const [products, setProducts] = useState(() => JSON.parse(localStorage.getItem('offerfizz_products')) || INITIAL_PRODUCTS);
   const [orders, setOrders] = useState(() => JSON.parse(localStorage.getItem('offerfizz_orders')) || []);
-  const [settings, setSettings] = useState(() => JSON.parse(localStorage.getItem('offerfizz_settings')) || INITIAL_SETTINGS);
+  const [settings, setSettings] = useState(() => INITIAL_SETTINGS);
   const [categories, setCategories] = useState(() => JSON.parse(localStorage.getItem('offerfizz_categories')) || INITIAL_CATEGORIES);
-  const [admins, setAdmins] = useState(() => JSON.parse(localStorage.getItem('offerfizz_admins')) || [{ username: 'Md Jewel', role: 'Super Admin', isFrozen: false }]);
+  const [admins, setAdmins] = useState(() => [{ username: 'admin', role: 'Super Admin', isFrozen: false }]);
 
   const [activeTab, setActiveTab] = useState('home'); 
   const [searchQuery, setSearchQuery] = useState('');
@@ -162,17 +162,15 @@ export default function App() {
 
   const handleAdminLogin = (e) => {
     e.preventDefault();
-    const adminAccount = admins.find(a => a.username === adminUsernameInput);
-    if (adminAccount?.isFrozen) return alert("⚠️ আপনার অ্যাকাউন্ট ফ্রিজ করা রয়েছে!");
-    if (adminUsernameInput === settings.superAdminUser && adminPasswordInput === settings.superAdminPass) {
-      setIsAdminLoggedIn(true);
-      setLoggedInAdminUser(adminUsernameInput);
-    } else alert("ভুল ইউজারনেম বা পাসওয়ার্ড!");
-  };
+    const userClean = adminUsernameInput.trim().toLowerCase();
+    const passClean = adminPasswordInput.trim();
 
-  const toggleFreezeAdmin = (username) => {
-    if (username === settings.superAdminUser) return alert("সুপার অ্যাডমিন ফ্রিজ করা সম্ভব নয়!");
-    setAdmins(admins.map(a => a.username === username ? { ...a, isFrozen: !a.isFrozen } : a));
+    if (userClean === 'admin' && passClean === '1234') {
+      setIsAdminLoggedIn(true);
+      setLoggedInAdminUser('admin');
+    } else {
+      alert("ভুল ইউজারনেম বা পাসওয়ার্ড!");
+    }
   };
 
   const handleSaveProduct = (e) => {
@@ -302,14 +300,13 @@ export default function App() {
             )}
           </main>
         )}
-
-        {activeTab === 'admin' && (
+{activeTab === 'admin' && (
           <main className="p-4 max-w-2xl mx-auto text-xs">
             {!isAdminLoggedIn ? (
               <form onSubmit={handleAdminLogin} className="bg-white p-5 rounded-2xl shadow-md border max-w-sm mx-auto space-y-3">
                 <h3 className="font-bold text-center text-sm">Admin Login</h3>
-                <input type="text" placeholder="Username" value={adminUsernameInput} onChange={(e) => setAdminUsernameInput(e.target.value)} className="w-full border rounded-xl p-2" />
-                <input type="password" placeholder="Password" value={adminPasswordInput} onChange={(e) => setAdminPasswordInput(e.target.value)} className="w-full border rounded-xl p-2" />
+                <input type="text" placeholder="Username (admin)" value={adminUsernameInput} onChange={(e) => setAdminUsernameInput(e.target.value)} className="w-full border rounded-xl p-2" />
+                <input type="password" placeholder="Password (1234)" value={adminPasswordInput} onChange={(e) => setAdminPasswordInput(e.target.value)} className="w-full border rounded-xl p-2" />
                 <button type="submit" className="w-full bg-purple-700 text-white font-bold py-2 rounded-xl">Login</button>
               </form>
             ) : (
