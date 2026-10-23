@@ -6,7 +6,10 @@ const INITIAL_PRODUCTS = [
     name: "🔥 পুরুষদের জন্য এক্সক্লুসিভ প্যাডিং জ্যাকেট 🧥",
     price: 1300,
     category: "Fashion",
-    image: "https://images.unsplash.com/photo-1544441893-675973e31985?w=500&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1544441893-675973e31985?w=500&q=80",
+      "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&q=80"
+    ],
     description: "উচ্চমানের শীতকালীন জ্যাকেট, খুবই আরামদায়ক ও ট্রেন্ডি ডিজাইন। শীতের জন্য পারফেক্ট চয়েস।",
     sizes: ["M", "L", "XL", "Free Size / Standard"],
     stock: 15
@@ -16,12 +19,27 @@ const INITIAL_PRODUCTS = [
     name: "Wireless Bluetooth Smartwatch Ultra",
     price: 1950,
     category: "Gadgets",
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80"
+    ],
     description: "স্মার্ট ওয়াচ, হেলথ ট্র্যাকিং এবং কলিং সুবিধাসহ। স্টাইলিশ অ্যান্ড স্মার্ট।",
     sizes: ["Standard"],
     stock: 8
   }
 ];
+
+const INITIAL_SETTINGS = {
+  storeName: "OfferFizz BD",
+  bannerTitle: "Welcome to OfferFizz BD!",
+  bannerSubtitle: "কম দামে সেরা অফারে প্রিমিয়াম প্রোডাক্ট কিনুন।",
+  bannerBgColor: "from-purple-600 to-indigo-600",
+  bkashNumber: "01700000000",
+  nagadNumber: "01700000000",
+  adminUser: "Md Jewel",
+  adminPass: "Jewel@338"
+};
+
+const INITIAL_CATEGORIES = ['All', 'Fashion', 'Gadgets', 'Electronics', 'Beauty'];
 
 export default function App() {
   const [products, setProducts] = useState(() => {
@@ -34,12 +52,23 @@ export default function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [settings, setSettings] = useState(() => {
+    const saved = localStorage.getItem('offerfizz_settings');
+    return saved ? JSON.parse(saved) : INITIAL_SETTINGS;
+  });
+
+  const [categories, setCategories] = useState(() => {
+    const saved = localStorage.getItem('offerfizz_categories');
+    return saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
+  });
+
   const [activeTab, setActiveTab] = useState('home'); 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [viewProductDetails, setViewProductDetails] = useState(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   const [orderForm, setOrderForm] = useState({
     name: '',
@@ -48,23 +77,27 @@ export default function App() {
     size: '',
     deliveryArea: 'outside',
     paymentMethod: 'COD',
-    trxId: ''
+    trxId: '',
+    paymentScreenshot: ''
   });
 
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
-  const [adminUsername, setAdminUsername] = useState('');
-  const [adminPassword, setAdminPassword] = useState('');
+  const [adminUsernameInput, setAdminUsernameInput] = useState('');
+  const [adminPasswordInput, setAdminPasswordInput] = useState('');
   const [adminSection, setAdminSection] = useState('dashboard');
 
   const [newProduct, setNewProduct] = useState({
     name: '',
     price: '',
     category: 'Fashion',
-    image: '',
+    images: [],
     description: '',
     sizes: 'M, L, XL',
     stock: 10
   });
+
+  const [newCatName, setNewCatName] = useState('');
+  const [passForm, setPassForm] = useState({ oldPass: '', newPass: '', confirmPass: '' });
 
   useEffect(() => {
     localStorage.setItem('offerfizz_products', JSON.stringify(products));
@@ -74,12 +107,37 @@ export default function App() {
     localStorage.setItem('offerfizz_orders', JSON.stringify(orders));
   }, [orders]);
 
-  const handleImageUpload = (e) => {
+  useEffect(() => {
+    localStorage.setItem('offerfizz_settings', JSON.stringify(settings));
+  }, [settings]);
+
+  useEffect(() => {
+    localStorage.setItem('offerfizz_categories', JSON.stringify(categories));
+  }, [categories]);
+
+  const handleMultipleImagesUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      const promises = files.map(file => {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        });
+      });
+
+      Promise.all(promises).then(uploadedImages => {
+        setNewProduct(prev => ({ ...prev, images: [...prev.images, ...uploadedImages] }));
+      });
+    }
+  };
+
+  const handleScreenshotUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setNewProduct({ ...newProduct, image: reader.result });
+        setOrderForm(prev => ({ ...prev, paymentScreenshot: reader.result }));
       };
       reader.readAsDataURL(file);
     }
@@ -95,7 +153,8 @@ export default function App() {
       size: product.sizes && product.sizes.length > 0 ? product.sizes[0] : 'Standard',
       deliveryArea: 'outside',
       paymentMethod: 'COD',
-      trxId: ''
+      trxId: '',
+      paymentScreenshot: ''
     });
   };
 
@@ -106,9 +165,15 @@ export default function App() {
       return;
     }
 
-    if ((orderForm.paymentMethod === 'bKash' || orderForm.paymentMethod === 'Nagad') && !orderForm.trxId) {
-      alert("দয়া করে বিকাশ/নগদ পেমেন্টের TrxID প্রদান করুন।");
-      return;
+    if (orderForm.paymentMethod === 'bKash' || orderForm.paymentMethod === 'Nagad') {
+      if (!orderForm.trxId) {
+        alert("দয়া করে বিকাশ/নগদ পেমেন্টের TrxID প্রদান করুন।");
+        return;
+      }
+      if (!orderForm.paymentScreenshot) {
+        alert("দয়া করে পেমেন্টের স্ক্রিনশট আপলোড করুন।");
+        return;
+      }
     }
 
     const deliveryCharge = orderForm.deliveryArea === 'inside' ? 60 : 120;
@@ -127,6 +192,7 @@ export default function App() {
       totalAmount: totalAmount,
       paymentMethod: orderForm.paymentMethod,
       trxId: orderForm.trxId || 'N/A',
+      paymentScreenshot: orderForm.paymentScreenshot || null,
       status: 'Pending',
       date: new Date().toLocaleDateString('bn-BD')
     };
@@ -144,7 +210,7 @@ export default function App() {
 
   const handleAdminLogin = (e) => {
     e.preventDefault();
-    if (adminUsername === 'Md Jewel' && adminPassword === 'Jewel@338') {
+    if (adminUsernameInput === settings.adminUser && adminPasswordInput === settings.adminPass) {
       setIsAdminLoggedIn(true);
     } else {
       alert("ভুল নাম বা পাসওয়ার্ড!");
@@ -153,6 +219,12 @@ export default function App() {
 
   const updateOrderStatus = (orderId, newStatus) => {
     setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+  };
+
+  const deleteOrder = (orderId) => {
+    if (window.confirm("আপনি কি নিশ্চিত যে এই অর্ডারটি ডিলিট করতে চান?")) {
+      setOrders(orders.filter(o => o.id !== orderId));
+    }
   };
 
   const handleAddProduct = (e) => {
@@ -164,14 +236,14 @@ export default function App() {
       name: newProduct.name,
       price: Number(newProduct.price),
       category: newProduct.category,
-      image: newProduct.image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80",
+      images: newProduct.images.length > 0 ? newProduct.images : ["https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80"],
       description: newProduct.description || "উচ্চমানের প্রিমিয়াম প্রোডাক্ট।",
       sizes: newProduct.sizes ? newProduct.sizes.split(',').map(s => s.trim()) : ['Standard'],
       stock: Number(newProduct.stock)
     };
 
     setProducts([added, ...products]);
-    setNewProduct({ name: '', price: '', category: 'Fashion', image: '', description: '', sizes: 'M, L, XL', stock: 10 });
+    setNewProduct({ name: '', price: '', category: 'Fashion', images: [], description: '', sizes: 'M, L, XL', stock: 10 });
     alert("প্রোডাক্ট সফলভাবে যুক্ত হয়েছে!");
   };
 
@@ -181,13 +253,49 @@ export default function App() {
     }
   };
 
+  const handleAddCategory = (e) => {
+    e.preventDefault();
+    if (newCatName.trim() && !categories.includes(newCatName.trim())) {
+      setCategories([...categories, newCatName.trim()]);
+      setNewCatName('');
+      alert("নতুন ক্যাটাগরি যুক্ত হয়েছে!");
+    }
+  };
+
+  const deleteCategory = (cat) => {
+    if (cat === 'All') return;
+    if (window.confirm(`"${cat}" ক্যাটাগরি ডিলিট করতে চান?`)) {
+      setCategories(categories.filter(c => c !== cat));
+    }
+  };
+
+  const handleChangePassword = (e) => {
+    e.preventDefault();
+    if (passForm.oldPass !== settings.adminPass) {
+      alert("বর্তমান পাসওয়ার্ডটি সঠিক নয়!");
+      return;
+    }
+    if (passForm.newPass !== passForm.confirmPass) {
+      alert("নতুন পাসওয়ার্ড দুটি মিলছে না!");
+      return;
+    }
+    if (passForm.newPass.length < 4) {
+      alert("পাসওয়ার্ড অন্তত ৪ অক্ষরের হতে হবে!");
+      return;
+    }
+
+    setSettings({ ...settings, adminPass: passForm.newPass });
+    setPassForm({ oldPass: '', newPass: '', confirmPass: '' });
+    alert("পাসওয়ার্ড সফলভাবে আপডেট করা হয়েছে!");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 pb-20">
       
       <header className="bg-white shadow-sm border-b sticky top-0 z-20 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setActiveTab('home')}>
           <span className="text-2xl">🛍️</span>
-          <h1 className="text-xl font-bold text-purple-700">OfferFizz BD</h1>
+          <h1 className="text-xl font-bold text-purple-700">{settings.storeName}</h1>
         </div>
         <button 
           onClick={() => setActiveTab('admin')} 
@@ -210,14 +318,14 @@ export default function App() {
           </div>
 
           <div className="p-3">
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 rounded-2xl shadow-md">
-              <h2 className="text-lg font-bold mb-1">Welcome to OfferFizz BD!</h2>
-              <p className="text-xs opacity-90">কম দামে সেরা অফারে প্রোডাক্ট কিনুন।</p>
+            <div className={`bg-gradient-to-r ${settings.bannerBgColor} text-white p-4 rounded-2xl shadow-md`}>
+              <h2 className="text-lg font-bold mb-1">{settings.bannerTitle}</h2>
+              <p className="text-xs opacity-90">{settings.bannerSubtitle}</p>
             </div>
           </div>
 
           <div className="px-3 mb-3 flex gap-2 overflow-x-auto pb-1">
-            {['All', 'Fashion', 'Gadgets', 'Electronics', 'Beauty'].map((cat) => (
+            {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
@@ -237,9 +345,9 @@ export default function App() {
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
               {filteredProducts.map((product) => (
                 <div key={product.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col justify-between">
-                  <div onClick={() => setViewProductDetails(product)} className="cursor-pointer">
+                  <div onClick={() => { setViewProductDetails(product); setActiveImageIndex(0); }} className="cursor-pointer">
                     <img 
-                      src={product.image} 
+                      src={product.images && product.images.length > 0 ? product.images[0] : product.image} 
                       alt={product.name} 
                       className="w-full h-36 object-cover" 
                     />
@@ -249,6 +357,11 @@ export default function App() {
                       </h4>
                       <div className="mt-2 flex items-baseline justify-between">
                         <span className="text-sm font-bold text-purple-700">৳ {product.price}</span>
+                        {product.images && product.images.length > 1 && (
+                          <span className="text-[10px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded font-semibold">
+                            {product.images.length} Colors
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -267,160 +380,10 @@ export default function App() {
           </div>
         </main>
       )}
-          {activeTab === 'orders' && (
-        <main className="p-4 max-w-md mx-auto">
-          <h2 className="text-base font-bold mb-3 text-gray-800">📦 আমার অর্ডারসমূহ</h2>
-          {orders.length === 0 ? (
-            <div className="text-center py-8 bg-white rounded-xl border text-xs text-gray-500">
-              কোনো অর্ডার ইতিহাস পাওয়া যায়নি।
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {orders.map((ord) => (
-                <div key={ord.id} className="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-                  <div className="flex justify-between items-start border-b pb-1.5 mb-1.5">
-                    <div>
-                      <span className="text-xs font-bold text-purple-700">{ord.id}</span>
-                      <p className="text-[10px] text-gray-400">{ord.date}</p>
-                    </div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
-                      ● {ord.status}
-                    </span>
-                  </div>
-                  <h4 className="font-semibold text-xs text-gray-800">{ord.productName}</h4>
-                  <p className="text-xs text-gray-600 mt-1">মোট: ৳{ord.totalAmount} ({ord.paymentMethod})</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </main>
-      )}
-
-      {activeTab === 'admin' && (
-        <main className="p-4 max-w-2xl mx-auto">
-          {!isAdminLoggedIn ? (
-            <div className="bg-white p-5 rounded-2xl shadow-md border max-w-sm mx-auto mt-6">
-              <div className="text-center mb-4">
-                <span className="text-3xl">🔑</span>
-                <h3 className="text-base font-bold mt-1">Admin Login</h3>
-                <p className="text-xs text-gray-500">Md Jewel</p>
-              </div>
-              <form onSubmit={handleAdminLogin} className="space-y-3">
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Username</label>
-                  <input 
-                    type="text" 
-                    placeholder="Md Jewel" 
-                    value={adminUsername}
-                    onChange={(e) => setAdminUsername(e.target.value)}
-                    className="w-full border rounded-xl p-2 text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold mb-1">Password</label>
-                  <input 
-                    type="password" 
-                    placeholder="••••••••" 
-                    value={adminPassword}
-                    onChange={(e) => setAdminPassword(e.target.value)}
-                    className="w-full border rounded-xl p-2 text-xs"
-                  />
-                </div>
-                <button type="submit" className="w-full bg-purple-700 text-white font-bold py-2 rounded-xl text-xs">
-                  Login
-                </button>
-              </form>
-            </div>
-          ) : (
-            <div>
-              <div className="flex justify-between items-center mb-4 bg-purple-900 text-white p-3.5 rounded-xl">
-                <div>
-                  <h2 className="font-bold text-sm">Admin Dashboard</h2>
-                  <p className="text-[10px] opacity-80">Md Jewel</p>
-                </div>
-                <button 
-                  onClick={() => setIsAdminLoggedIn(false)} 
-                  className="bg-purple-800 hover:bg-purple-700 px-2.5 py-1 rounded text-xs"
-                >
-                  Logout
-                </button>
-              </div>
-
-              <div className="flex gap-2 mb-4 border-b pb-2">
-                <button 
-                  onClick={() => setAdminSection('dashboard')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold ${adminSection === 'dashboard' ? 'bg-purple-700 text-white' : 'bg-white border'}`}
-                >
-                  Dashboard
-                </button>
-                <button 
-                  onClick={() => setAdminSection('orders')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold ${adminSection === 'orders' ? 'bg-purple-700 text-white' : 'bg-white border'}`}
-                >
-                  Orders ({orders.length})
-                </button>
-                <button 
-                  onClick={() => setAdminSection('products')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold ${adminSection === 'products' ? 'bg-purple-700 text-white' : 'bg-white border'}`}
-                >
-                  Products ({products.length})
-                </button>
-              </div>
-
-              {adminSection === 'dashboard' && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white p-3 rounded-xl border">
-                    <span className="text-[11px] text-gray-500">Total Orders</span>
-                    <h3 className="text-lg font-bold text-gray-800">{orders.length}</h3>
-                  </div>
-                  <div className="bg-white p-3 rounded-xl border">
-                    <span className="text-[11px] text-gray-500">Pending Orders</span>
-                    <h3 className="text-lg font-bold text-amber-600">{orders.filter(o => o.status === 'Pending').length}</h3>
-                  </div>
-                  <div className="bg-white p-3 rounded-xl border col-span-2">
-                    <span className="text-[11px] text-gray-500">Total Sales</span>
-                    <h3 className="text-lg font-bold text-emerald-600">৳ {orders.reduce((sum, o) => sum + o.totalAmount, 0)}</h3>
-                  </div>
-                </div>
-              )}
-
-              {adminSection === 'orders' && (
-                <div className="space-y-3">
-                  {orders.length === 0 ? (
-                    <p className="text-xs text-gray-500 bg-white p-3 rounded-xl border text-center">কোনো অর্ডার নেই</p>
-                  ) : (
-                    orders.map((ord) => (
-                      <div key={ord.id} className="bg-white p-3 rounded-xl border space-y-1.5 text-xs">
-                        <div className="flex justify-between border-b pb-1">
-                          <span className="font-bold text-purple-700">{ord.id}</span>
-                          <select 
-                            value={ord.status}
-                            onChange={(e) => updateOrderStatus(ord.id, e.target.value)}
-                            className="text-xs font-bold border rounded p-0.5 bg-gray-50"
-                          >
-                            <option value="Pending">Pending</option>
-                            <option value="Confirmed">Confirmed</option>
-                            <option value="Processing">Processing</option>
-                            <option value="Shipped">Shipped</option>
-                            <option value="Delivered">Delivered</option>
-                          </select>
-                        </div>
-                        <p><strong>প্রোডাক্ট:</strong> {ord.productName}</p>
-                        <p><strong>সাইজ:</strong> {ord.size}</p>
-                        <p><strong>কাস্টমার:</strong> {ord.customerName} ({ord.mobile})</p>
-                        <p><strong>ঠিকানা:</strong> {ord.address}</p>
-                        <p><strong>পেমেন্ট:</strong> {ord.paymentMethod} | <strong>TrxID:</strong> <span className="bg-yellow-100 font-bold px-1">{ord.trxId}</span></p>
-                        <p className="font-bold text-emerald-700">মোট: ৳{ord.totalAmount}</p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-
-              {adminSection === 'products' && (
+                  {adminSection === 'products' && (
                 <div className="space-y-4">
-                  <form onSubmit={handleAddProduct} className="bg-white p-3 rounded-xl border space-y-2 text-xs">
-                    <h3 className="font-bold">নতুন প্রোডাক্ট যুক্ত করুন</h3>
+                  <form onSubmit={handleAddProduct} className="bg-white p-3.5 rounded-xl border space-y-2 text-xs">
+                    <h3 className="font-bold border-b pb-1">নতুন প্রোডাক্ট যুক্ত করুন</h3>
                     
                     <input 
                       type="text" 
@@ -445,26 +408,28 @@ export default function App() {
                         onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
                         className="border p-2 rounded bg-white"
                       >
-                        <option value="Fashion">Fashion</option>
-                        <option value="Gadgets">Gadgets</option>
-                        <option value="Electronics">Electronics</option>
-                        <option value="Beauty">Beauty</option>
+                        {categories.filter(c => c !== 'All').map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
                       </select>
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-600 mb-1">গ্যালারি থেকে ছবি আপলোড করুন:</label>
+                      <label className="block text-[11px] font-bold text-gray-600 mb-1">একাধিক ছবি (৪-৫টি কালার/ভিউ) সিলেক্ট করুন:</label>
                       <input 
                         type="file" 
                         accept="image/*"
-                        onChange={handleImageUpload}
+                        multiple
+                        onChange={handleMultipleImagesUpload}
                         className="border p-1.5 rounded w-full bg-gray-50 text-xs"
                       />
                     </div>
 
-                    {newProduct.image && (
-                      <div className="my-1">
-                        <img src={newProduct.image} alt="Preview" className="w-16 h-16 object-cover rounded border" />
+                    {newProduct.images.length > 0 && (
+                      <div className="flex gap-2 overflow-x-auto my-2 p-1 bg-gray-50 rounded border">
+                        {newProduct.images.map((img, idx) => (
+                          <img key={idx} src={img} alt="Preview" className="w-12 h-12 object-cover rounded border" />
+                        ))}
                       </div>
                     )}
 
@@ -502,13 +467,143 @@ export default function App() {
                     {products.map((p) => (
                       <div key={p.id} className="bg-white p-2.5 rounded-xl border flex items-center justify-between text-xs">
                         <div className="flex items-center gap-2">
-                          <img src={p.image} alt={p.name} className="w-8 h-8 object-cover rounded" />
-                          <span className="font-semibold line-clamp-1">{p.name} - ৳{p.price}</span>
+                          <img src={p.images && p.images.length > 0 ? p.images[0] : p.image} alt={p.name} className="w-8 h-8 object-cover rounded" />
+                          <div>
+                            <span className="font-semibold line-clamp-1">{p.name} - ৳{p.price}</span>
+                            <span className="text-[10px] text-gray-400">{p.images?.length || 1} Images</span>
+                          </div>
                         </div>
                         <button onClick={() => deleteProduct(p.id)} className="text-red-500 font-bold px-2">✕</button>
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {adminSection === 'categories' && (
+                <div className="space-y-4">
+                  <form onSubmit={handleAddCategory} className="bg-white p-3 rounded-xl border space-y-2 text-xs">
+                    <h3 className="font-bold">নতুন ক্যাটাগরি যুক্ত করুন</h3>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        placeholder="ক্যাটাগরি নাম (যেমন: Winter Collection)" 
+                        value={newCatName}
+                        onChange={(e) => setNewCatName(e.target.value)}
+                        className="border p-2 rounded w-full text-xs"
+                        required
+                      />
+                      <button type="submit" className="bg-purple-700 text-white font-bold px-4 py-2 rounded whitespace-nowrap">
+                        Add
+                      </button>
+                    </div>
+                  </form>
+
+                  <div className="bg-white p-3 rounded-xl border text-xs space-y-2">
+                    <h4 className="font-bold border-b pb-1">বিদ্যমান ক্যাটাগরিসমূহ:</h4>
+                    {categories.map((cat) => (
+                      <div key={cat} className="flex justify-between items-center py-1 border-b last:border-b-0">
+                        <span>{cat}</span>
+                        {cat !== 'All' && (
+                          <button onClick={() => deleteCategory(cat)} className="text-red-500 font-bold px-2">✕</button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {adminSection === 'settings' && (
+                <div className="space-y-4 text-xs">
+                  <div className="bg-white p-3.5 rounded-xl border space-y-2">
+                    <h3 className="font-bold border-b pb-1 text-sm">ওয়েবসাইট ও ব্যানার সেটিংস</h3>
+                    <div>
+                      <label className="block font-semibold mb-1">স্টোর নাম</label>
+                      <input 
+                        type="text" 
+                        value={settings.storeName} 
+                        onChange={(e) => setSettings({ ...settings, storeName: e.target.value })}
+                        className="w-full border rounded p-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold mb-1">ব্যানার শিরোনাম</label>
+                      <input 
+                        type="text" 
+                        value={settings.bannerTitle} 
+                        onChange={(e) => setSettings({ ...settings, bannerTitle: e.target.value })}
+                        className="w-full border rounded p-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold mb-1">ব্যানার উপ-শিরোনাম</label>
+                      <input 
+                        type="text" 
+                        value={settings.bannerSubtitle} 
+                        onChange={(e) => setSettings({ ...settings, bannerSubtitle: e.target.value })}
+                        className="w-full border rounded p-2"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-3.5 rounded-xl border space-y-2">
+                    <h3 className="font-bold border-b pb-1 text-sm">পেমেন্ট নম্বর সেটিংস</h3>
+                    <div>
+                      <label className="block font-semibold mb-1">বিকাশ পার্সোনাল নম্বর</label>
+                      <input 
+                        type="text" 
+                        value={settings.bkashNumber} 
+                        onChange={(e) => setSettings({ ...settings, bkashNumber: e.target.value })}
+                        className="w-full border rounded p-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold mb-1">নগদ পার্সোনাল নম্বর</label>
+                      <input 
+                        type="text" 
+                        value={settings.nagadNumber} 
+                        onChange={(e) => setSettings({ ...settings, nagadNumber: e.target.value })}
+                        className="w-full border rounded p-2"
+                      />
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleChangePassword} className="bg-white p-3.5 rounded-xl border space-y-2">
+                    <h3 className="font-bold border-b pb-1 text-sm text-purple-800">🔐 অ্যাডমিন পাসওয়ার্ড পরিবর্তন</h3>
+                    <div>
+                      <label className="block font-semibold mb-1">বর্তমান পাসওয়ার্ড</label>
+                      <input 
+                        type="password" 
+                        required
+                        value={passForm.oldPass} 
+                        onChange={(e) => setPassForm({ ...passForm, oldPass: e.target.value })}
+                        className="w-full border rounded p-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold mb-1">নতুন পাসওয়ার্ড</label>
+                      <input 
+                        type="password" 
+                        required
+                        value={passForm.newPass} 
+                        onChange={(e) => setPassForm({ ...passForm, newPass: e.target.value })}
+                        className="w-full border rounded p-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold mb-1">নতুন পাসওয়ার্ড পুনরায় নিশ্চিত করুন</label>
+                      <input 
+                        type="password" 
+                        required
+                        value={passForm.confirmPass} 
+                        onChange={(e) => setPassForm({ ...passForm, confirmPass: e.target.value })}
+                        className="w-full border rounded p-2"
+                      />
+                    </div>
+                    <button type="submit" className="w-full bg-purple-700 text-white font-bold py-2 rounded-lg">
+                      পাসওয়ার্ড আপডেট করুন
+                    </button>
+                  </form>
                 </div>
               )}
             </div>
@@ -525,10 +620,24 @@ export default function App() {
             </div>
 
             <img 
-              src={viewProductDetails.image} 
+              src={viewProductDetails.images && viewProductDetails.images.length > 0 ? viewProductDetails.images[activeImageIndex] : viewProductDetails.image} 
               alt={viewProductDetails.name} 
-              className="w-full h-52 object-cover rounded-xl mb-3" 
+              className="w-full h-52 object-cover rounded-xl mb-2" 
             />
+
+            {viewProductDetails.images && viewProductDetails.images.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto mb-3 pb-1">
+                {viewProductDetails.images.map((img, idx) => (
+                  <img 
+                    key={idx} 
+                    src={img} 
+                    alt="Thumbnail" 
+                    onClick={() => setActiveImageIndex(idx)}
+                    className={`w-12 h-12 object-cover rounded-lg border-2 cursor-pointer ${activeImageIndex === idx ? 'border-purple-600 scale-105' : 'border-gray-200 opacity-70'}`}
+                  />
+                ))}
+              </div>
+            )}
 
             <h2 className="text-base font-bold text-gray-800 mb-1">{viewProductDetails.name}</h2>
             <p className="text-lg font-extrabold text-purple-700 mb-3">৳ {viewProductDetails.price}</p>
@@ -635,14 +744,17 @@ export default function App() {
                   className="w-full border rounded p-2 bg-white"
                 >
                   <option value="COD">Cash on Delivery (COD)</option>
-                  <option value="bKash">bKash Personal (01700000000)</option>
-                  <option value="Nagad">Nagad Personal (01700000000)</option>
+                  <option value="bKash">bKash Personal ({settings.bkashNumber})</option>
+                  <option value="Nagad">Nagad Personal ({settings.nagadNumber})</option>
                 </select>
               </div>
 
               {(orderForm.paymentMethod === 'bKash' || orderForm.paymentMethod === 'Nagad') && (
-                <div className="bg-purple-50 p-2 rounded border border-purple-200">
-                  <p className="text-[11px] text-purple-800 font-semibold mb-1">TrxID দিন:</p>
+                <div className="bg-purple-50 p-2.5 rounded-xl border border-purple-200 space-y-2">
+                  <p className="text-[11px] text-purple-800 font-semibold">
+                    দয়া করে <span className="font-bold">{settings[orderForm.paymentMethod.toLowerCase() + 'Number']}</span> নম্বরে টাকা পাঠিয় TrxID এবং স্ক্রিনশট দিন:
+                  </p>
+                  
                   <input 
                     type="text" 
                     placeholder="Enter TrxID"
@@ -651,22 +763,21 @@ export default function App() {
                     className="w-full border rounded p-1.5 bg-white text-xs font-mono"
                     required
                   />
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 mb-1">পেমেন্ট স্ক্রিনশট আপলোড করুন:</label>
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleScreenshotUpload}
+                      className="w-full text-xs bg-white border p-1 rounded"
+                      required
+                    />
+                  </div>
                 </div>
               )}
 
-              <div className="border-2 border-dashed border-emerald-500 bg-emerald-50 p-2.5 rounded-xl text-center font-bold text-emerald-800">
-                Total: Tk {selectedProduct.price + (orderForm.deliveryArea === 'inside' ? 60 : 120)}
-              </div>
-
-              <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-xl shadow-md text-xs">
-                Confirm order.
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
+                    <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
         <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center ${activeTab === 'home' ? 'text-purple-700 font-bold' : ''}`}>
           <span>🛍️ Home</span>
         </button>
@@ -681,4 +792,3 @@ export default function App() {
     </div>
   );
 }
-              
