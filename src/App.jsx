@@ -380,7 +380,166 @@ export default function App() {
           </div>
         </main>
       )}
-                  {adminSection === 'products' && (
+
+      {activeTab === 'orders' && (
+        <main className="p-4 max-w-md mx-auto">
+          <h2 className="text-base font-bold mb-3 text-gray-800">📦 আমার অর্ডারসমূহ</h2>
+          {orders.length === 0 ? (
+            <div className="text-center py-8 bg-white rounded-xl border text-xs text-gray-500">
+              কোনো অর্ডার ইতিহাস পাওয়া যায়নি।
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {orders.map((ord) => (
+                <div key={ord.id} className="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                  <div className="flex justify-between items-start border-b pb-1.5 mb-1.5">
+                    <div>
+                      <span className="text-xs font-bold text-purple-700">{ord.id}</span>
+                      <p className="text-[10px] text-gray-400">{ord.date}</p>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                      ● {ord.status}
+                    </span>
+                  </div>
+                  <h4 className="font-semibold text-xs text-gray-800">{ord.productName}</h4>
+                  <p className="text-xs text-gray-600 mt-1">মোট: ৳{ord.totalAmount} ({ord.paymentMethod})</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+      )}
+          {activeTab === 'admin' && (
+        <main className="p-4 max-w-2xl mx-auto">
+          {!isAdminLoggedIn ? (
+            <div className="bg-white p-5 rounded-2xl shadow-md border max-w-sm mx-auto mt-6">
+              <div className="text-center mb-4">
+                <span className="text-3xl">🔑</span>
+                <h3 className="text-base font-bold mt-1">Admin Login</h3>
+                <p className="text-xs text-gray-500">{settings.adminUser}</p>
+              </div>
+              <form onSubmit={handleAdminLogin} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold mb-1">Username</label>
+                  <input 
+                    type="text" 
+                    placeholder="Username" 
+                    value={adminUsernameInput}
+                    onChange={(e) => setAdminUsernameInput(e.target.value)}
+                    className="w-full border rounded-xl p-2 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1">Password</label>
+                  <input 
+                    type="password" 
+                    placeholder="••••••••" 
+                    value={adminPasswordInput}
+                    onChange={(e) => setAdminPasswordInput(e.target.value)}
+                    className="w-full border rounded-xl p-2 text-xs"
+                  />
+                </div>
+                <button type="submit" className="w-full bg-purple-700 text-white font-bold py-2 rounded-xl text-xs">
+                  Login
+                </button>
+              </form>
+            </div>
+          ) : (
+            <div>
+              <div className="flex justify-between items-center mb-4 bg-purple-900 text-white p-3.5 rounded-xl">
+                <div>
+                  <h2 className="font-bold text-sm">Admin Dashboard</h2>
+                  <p className="text-[10px] opacity-80">{settings.adminUser}</p>
+                </div>
+                <button 
+                  onClick={() => setIsAdminLoggedIn(false)} 
+                  className="bg-purple-800 hover:bg-purple-700 px-2.5 py-1 rounded text-xs"
+                >
+                  Logout
+                </button>
+              </div>
+
+              <div className="flex gap-1.5 mb-4 border-b pb-2 overflow-x-auto">
+                {['dashboard', 'orders', 'products', 'categories', 'settings'].map(tab => (
+                  <button 
+                    key={tab}
+                    onClick={() => setAdminSection(tab)}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold capitalize whitespace-nowrap ${
+                      adminSection === tab ? 'bg-purple-700 text-white' : 'bg-white border'
+                    }`}
+                  >
+                    {tab === 'orders' ? `Orders (${orders.length})` : tab === 'products' ? `Products (${products.length})` : tab}
+                  </button>
+                ))}
+              </div>
+
+              {adminSection === 'dashboard' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white p-3 rounded-xl border">
+                    <span className="text-[11px] text-gray-500">Total Orders</span>
+                    <h3 className="text-lg font-bold text-gray-800">{orders.length}</h3>
+                  </div>
+                  <div className="bg-white p-3 rounded-xl border">
+                    <span className="text-[11px] text-gray-500">Pending Orders</span>
+                    <h3 className="text-lg font-bold text-amber-600">{orders.filter(o => o.status === 'Pending').length}</h3>
+                  </div>
+                  <div className="bg-white p-3 rounded-xl border col-span-2">
+                    <span className="text-[11px] text-gray-500">Total Sales</span>
+                    <h3 className="text-lg font-bold text-emerald-600">৳ {orders.reduce((sum, o) => sum + o.totalAmount, 0)}</h3>
+                  </div>
+                </div>
+              )}
+
+              {adminSection === 'orders' && (
+                <div className="space-y-3">
+                  {orders.length === 0 ? (
+                    <p className="text-xs text-gray-500 bg-white p-3 rounded-xl border text-center">কোনো অর্ডার নেই</p>
+                  ) : (
+                    orders.map((ord) => (
+                      <div key={ord.id} className="bg-white p-3.5 rounded-xl border space-y-2 text-xs">
+                        <div className="flex justify-between items-center border-b pb-1.5">
+                          <span className="font-bold text-purple-700">{ord.id}</span>
+                          <div className="flex items-center gap-2">
+                            <select 
+                              value={ord.status}
+                              onChange={(e) => updateOrderStatus(ord.id, e.target.value)}
+                              className="text-xs font-bold border rounded p-1 bg-gray-50"
+                            >
+                              <option value="Pending">Pending</option>
+                              <option value="Confirmed">Confirmed</option>
+                              <option value="Processing">Processing</option>
+                              <option value="Shipped">Shipped</option>
+                              <option value="Delivered">Delivered</option>
+                            </select>
+                            <button onClick={() => deleteOrder(ord.id)} className="text-red-600 font-bold bg-red-50 hover:bg-red-100 p-1 rounded">
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
+
+                        <p><strong>প্রোডাক্ট:</strong> {ord.productName}</p>
+                        <p><strong>সাইজ:</strong> {ord.size}</p>
+                        <p><strong>কাস্টমার:</strong> {ord.customerName} ({ord.mobile})</p>
+                        <p><strong>ঠিকানা:</strong> {ord.address}</p>
+                        <p><strong>পেমেন্ট:</strong> {ord.paymentMethod} | <strong>TrxID:</strong> <span className="bg-yellow-100 font-bold px-1.5 py-0.5 rounded">{ord.trxId}</span></p>
+
+                        {ord.paymentScreenshot && (
+                          <div className="mt-2 bg-gray-50 p-2 rounded border">
+                            <p className="font-bold text-[11px] text-gray-700 mb-1">পেমেন্ট স্ক্রিনশট:</p>
+                            <a href={ord.paymentScreenshot} target="_blank" rel="noreferrer">
+                              <img src={ord.paymentScreenshot} alt="Trx Screenshot" className="w-24 h-24 object-cover rounded border hover:opacity-90" />
+                            </a>
+                          </div>
+                        )}
+
+                        <p className="font-bold text-emerald-700 text-sm border-t pt-1">মোট: ৳{ord.totalAmount}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {adminSection === 'products' && (
                 <div className="space-y-4">
                   <form onSubmit={handleAddProduct} className="bg-white p-3.5 rounded-xl border space-y-2 text-xs">
                     <h3 className="font-bold border-b pb-1">নতুন প্রোডাক্ট যুক্ত করুন</h3>
@@ -610,8 +769,7 @@ export default function App() {
           )}
         </main>
       )}
-
-      {viewProductDetails && (
+         {viewProductDetails && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3">
           <div className="bg-white rounded-2xl max-w-md w-full p-4 relative max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-2 border-b pb-2">
@@ -752,7 +910,7 @@ export default function App() {
               {(orderForm.paymentMethod === 'bKash' || orderForm.paymentMethod === 'Nagad') && (
                 <div className="bg-purple-50 p-2.5 rounded-xl border border-purple-200 space-y-2">
                   <p className="text-[11px] text-purple-800 font-semibold">
-                    দয়া করে <span className="font-bold">{settings[orderForm.paymentMethod.toLowerCase() + 'Number']}</span> নম্বরে টাকা পাঠিয় TrxID এবং স্ক্রিনশট দিন:
+                    দয়া করে <span className="font-bold">{settings[orderForm.paymentMethod.toLowerCase() + 'Number']}</span> নম্বরে টাকা পাঠিয়ে TrxID এবং স্ক্রিনশট দিন:
                   </p>
                   
                   <input 
@@ -777,7 +935,19 @@ export default function App() {
                 </div>
               )}
 
-                    <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
+              <div className="border-2 border-dashed border-emerald-500 bg-emerald-50 p-2.5 rounded-xl text-center font-bold text-emerald-800">
+                Total: Tk {selectedProduct.price + (orderForm.deliveryArea === 'inside' ? 60 : 120)}
+              </div>
+
+              <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-xl shadow-md text-xs">
+                Confirm order.
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
         <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center ${activeTab === 'home' ? 'text-purple-700 font-bold' : ''}`}>
           <span>🛍️ Home</span>
         </button>
@@ -792,3 +962,4 @@ export default function App() {
     </div>
   );
 }
+                
