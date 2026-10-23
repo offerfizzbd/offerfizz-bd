@@ -7,7 +7,7 @@ const INITIAL_PRODUCTS = [
     price: 1300,
     category: "Fashion",
     image: "https://images.unsplash.com/photo-1544441893-675973e31985?w=500&q=80",
-    description: "উচ্চমানের শীতকালীন জ্যাকেট, খুবই আরামদায়ক ও ট্রেন্ডি ডিজাইন।",
+    description: "উচ্চমানের শীতকালীন জ্যাকেট, খুবই আরামদায়ক ও ট্রেন্ডি ডিজাইন। শীতের জন্য পারফেক্ট চয়েস।",
     sizes: ["M", "L", "XL", "Free Size / Standard"],
     stock: 15
   },
@@ -17,29 +17,9 @@ const INITIAL_PRODUCTS = [
     price: 1950,
     category: "Gadgets",
     image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80",
-    description: "স্মার্ট ওয়াচ, হেলথ ট্র্যাকিং এবং কলিং সুবিধাসহ।",
+    description: "স্মার্ট ওয়াচ, হেলথ ট্র্যাকিং এবং কলিং সুবিধাসহ। স্টাইলিশ অ্যান্ড স্মার্ট।",
     sizes: ["Standard"],
     stock: 8
-  },
-  {
-    id: 3,
-    name: "Premium Cotton Smart Polo Shirt",
-    price: 750,
-    category: "Fashion",
-    image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=500&q=80",
-    description: "১০০% প্রিমিয়াম কটন ফ্যাব্রিক, স্টাইলিশ অ্যান্ড ক্যাজুয়াল লুক।",
-    sizes: ["M", "L", "XL", "XXL"],
-    stock: 20
-  },
-  {
-    id: 4,
-    name: "Stylish Running Sneaker Shoes",
-    price: 1550,
-    category: "Fashion",
-    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&q=80",
-    description: "হালকা এবং টেকসই, প্রতিদিনের ব্যবহারের জন্য পারফেক্ট।",
-    sizes: ["39", "40", "41", "42", "43"],
-    stock: 12
   }
 ];
 
@@ -58,7 +38,10 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  // Modals State
+  const [selectedProduct, setSelectedProduct] = useState(null); // for order popup
+  const [viewProductDetails, setViewProductDetails] = useState(null); // for product details popup
+
   const [orderForm, setOrderForm] = useState({
     name: '',
     mobile: '',
@@ -80,7 +63,7 @@ export default function App() {
     category: 'Fashion',
     image: '',
     description: '',
-    sizes: 'Standard',
+    sizes: 'M, L, XL',
     stock: 10
   });
 
@@ -92,8 +75,21 @@ export default function App() {
     localStorage.setItem('offerfizz_orders', JSON.stringify(orders));
   }, [orders]);
 
+  // Image Upload Handler (Base64)
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewProduct({ ...newProduct, image: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const openOrderModal = (product) => {
     setSelectedProduct(product);
+    setViewProductDetails(null); // close details modal if open
     setOrderForm({
       name: '',
       mobile: '',
@@ -187,14 +183,14 @@ export default function App() {
       price: Number(newProduct.price),
       category: newProduct.category,
       image: newProduct.image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80",
-      description: newProduct.description,
-      sizes: newProduct.sizes.split(',').map(s => s.trim()),
+      description: newProduct.description || "উচ্চমানের প্রিমিয়াম প্রোডাক্ট।",
+      sizes: newProduct.sizes ? newProduct.sizes.split(',').map(s => s.trim()) : ['Standard'],
       stock: Number(newProduct.stock)
     };
 
-    setProducts([...products, added]);
-    setNewProduct({ name: '', price: '', category: 'Fashion', image: '', description: '', sizes: 'Standard', stock: 10 });
-    alert("প্রোডাক্ট যুক্ত হয়েছে!");
+    setProducts([added, ...products]);
+    setNewProduct({ name: '', price: '', category: 'Fashion', image: '', description: '', sizes: 'M, L, XL', stock: 10 });
+    alert("প্রোডাক্ট সফলভাবে যুক্ত হয়েছে!");
   };
 
   const deleteProduct = (id) => {
@@ -254,19 +250,21 @@ export default function App() {
             ))}
           </div>
 
+          {/* ২-কলামের প্রোডাক্ট গ্রিড */}
           <div className="px-3">
             <h3 className="text-xs font-bold text-gray-700 mb-2">সকল প্রোডাক্ট ({filteredProducts.length})</h3>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
               {filteredProducts.map((product) => (
                 <div key={product.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col justify-between">
-                  <div>
+                  {/* ছবিতে বা নামে চাপ দিলে ডিটেলস পপআপ শো করবে */}
+                  <div onClick={() => setViewProductDetails(product)} className="cursor-pointer">
                     <img 
                       src={product.image} 
                       alt={product.name} 
                       className="w-full h-36 object-cover" 
                     />
                     <div className="p-2.5">
-                      <h4 className="font-semibold text-xs line-clamp-2 text-gray-800 leading-snug">
+                      <h4 className="font-semibold text-xs line-clamp-2 text-gray-800 leading-snug hover:text-purple-700">
                         {product.name}
                       </h4>
                       <div className="mt-2 flex items-baseline justify-between">
@@ -442,6 +440,7 @@ export default function App() {
                 <div className="space-y-4">
                   <form onSubmit={handleAddProduct} className="bg-white p-3 rounded-xl border space-y-2 text-xs">
                     <h3 className="font-bold">নতুন প্রোডাক্ট যুক্ত করুন</h3>
+                    
                     <input 
                       type="text" 
                       placeholder="প্রোডাক্ট নাম" 
@@ -450,6 +449,7 @@ export default function App() {
                       className="border p-2 rounded w-full"
                       required
                     />
+
                     <div className="grid grid-cols-2 gap-2">
                       <input 
                         type="number" 
@@ -467,15 +467,52 @@ export default function App() {
                         <option value="Fashion">Fashion</option>
                         <option value="Gadgets">Gadgets</option>
                         <option value="Electronics">Electronics</option>
+                        <option value="Beauty">Beauty</option>
                       </select>
                     </div>
-                    <input 
-                      type="text" 
-                      placeholder="ছবি লিংক (Image URL)" 
-                      value={newProduct.image}
-                      onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
+
+                    {/* সরাসরি ফাইল আপলোড */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-600 mb-1">গ্যালারি থেকে ছবি আপলোড করুন:</label>
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="border p-1.5 rounded w-full bg-gray-50 text-xs"
+                      />
+                    </div>
+
+                    {newProduct.image && (
+                      <div className="my-1">
+                        <img src={newProduct.image} alt="Preview" className="w-16 h-16 object-cover rounded border" />
+                      </div>
+                    )}
+
+                    <textarea 
+                      placeholder="প্রোডাক্টের বিবরণ (Description)..." 
+                      value={newProduct.description}
+                      onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
                       className="border p-2 rounded w-full"
-                    />
+                      rows="2"
+                    ></textarea>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <input 
+                        type="text" 
+                        placeholder="সাইজসমূহ (যেমন: M, L, XL)" 
+                        value={newProduct.sizes}
+                        onChange={(e) => setNewProduct({ ...newProduct, sizes: e.target.value })}
+                        className="border p-2 rounded"
+                      />
+                      <input 
+                        type="number" 
+                        placeholder="স্টক পরিমাণ" 
+                        value={newProduct.stock}
+                        onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
+                        className="border p-2 rounded"
+                      />
+                    </div>
+
                     <button type="submit" className="bg-emerald-600 text-white font-bold py-2 rounded w-full">
                       সেভ করুন
                     </button>
@@ -499,6 +536,42 @@ export default function App() {
         </main>
       )}
 
+      {/* 🔍 প্রোডাক্ট ডিটেলস পপআপ মডাল */}
+      {viewProductDetails && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3">
+          <div className="bg-white rounded-2xl max-w-md w-full p-4 relative max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-2 border-b pb-2">
+              <h3 className="text-sm font-bold text-gray-800">প্রোডাক্ট বিস্তারিত</h3>
+              <button onClick={() => setViewProductDetails(null)} className="text-gray-500 font-bold px-2">✕</button>
+            </div>
+
+            <img 
+              src={viewProductDetails.image} 
+              alt={viewProductDetails.name} 
+              className="w-full h-52 object-cover rounded-xl mb-3" 
+            />
+
+            <h2 className="text-base font-bold text-gray-800 mb-1">{viewProductDetails.name}</h2>
+            <p className="text-lg font-extrabold text-purple-700 mb-3">৳ {viewProductDetails.price}</p>
+
+            <div className="bg-gray-50 p-3 rounded-xl border mb-3 text-xs text-gray-600 space-y-1">
+              <p><strong>ক্যাটাগরি:</strong> {viewProductDetails.category}</p>
+              <p><strong>উপলব্ধ সাইজ:</strong> {viewProductDetails.sizes ? viewProductDetails.sizes.join(', ') : 'Standard'}</p>
+              <p className="mt-2"><strong>বিবরণ:</strong></p>
+              <p className="text-gray-700 leading-relaxed">{viewProductDetails.description}</p>
+            </div>
+
+            <button 
+              onClick={() => openOrderModal(viewProductDetails)}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md"
+            >
+              Order Now
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 📝 অর্ডার ফর্ম পপআপ মডাল */}
       {selectedProduct && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3">
           <div className="bg-white rounded-2xl max-w-md w-full p-4 relative max-h-[90vh] overflow-y-auto">
@@ -552,6 +625,19 @@ export default function App() {
               </div>
 
               <div>
+                <label className="block font-bold mb-1">Select size:</label>
+                <select 
+                  value={orderForm.size} 
+                  onChange={(e) => setOrderForm({ ...orderForm, size: e.target.value })}
+                  className="w-full border rounded p-2 bg-white"
+                >
+                  {selectedProduct.sizes?.map((sz, idx) => (
+                    <option key={idx} value={sz}>{sz}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
                 <label className="block font-bold mb-1">Select delivery area:</label>
                 <select 
                   value={orderForm.deliveryArea} 
@@ -602,6 +688,8 @@ export default function App() {
         </div>
       )}
 
+     <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
+       
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
         <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center ${activeTab === 'home' ? 'text-purple-700 font-bold' : ''}`}>
           <span>🛍️ Home</span>
@@ -610,11 +698,4 @@ export default function App() {
           <span>📦 Orders</span>
         </button>
         <button onClick={() => setActiveTab('admin')} className={`flex flex-col items-center ${activeTab === 'admin' ? 'text-purple-700 font-bold' : ''}`}>
-          <span>👤 Admin</span>
-        </button>
-      </div>
-
-    </div>
-  );
- }
-                  
+          <span>👤 Ad
