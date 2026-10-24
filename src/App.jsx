@@ -1,687 +1,451 @@
-HTML
+import React, { useState, useEffect } from 'react';
 
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#6d28d9">
-<title>OfferFizz BD | Shop Smart</title>
-<style>
-:root {
-  --primary: #6d28d9;
-  --secondary: #ff5b79;
-  --bg: #f7f5fc;
-  --text: #211a35;
-  --muted: #77718a;
-  --white: #fff;
-  --radius: 18px;
-}
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  font-family: system-ui, "Noto Sans Bengali", sans-serif;
-  background: var(--bg);
-  color: var(--text);
-}
-button, input { font: inherit; }
-button { cursor: pointer; }
-header {
-  background: var(--white);
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  box-shadow: 0 2px 15px #27134c0b;
-}
-.top {
-  max-width: 1200px;
-  margin: auto;
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  justify-content: space-between;
-}
-.logo {
-  font-size: 23px;
-  font-weight: 900;
-  color: var(--primary);
-  white-space: nowrap;
-}
-.logo span { color: var(--secondary); }
-.search {
-  flex: 1;
-  max-width: 470px;
-  display: flex;
-  background: #f4f1fb;
-  border-radius: 30px;
-  padding: 5px 12px;
-}
-.search input {
-  min-width: 0;
-  width: 100%;
-  border: 0;
-  outline: none;
-  background: transparent;
-  padding: 9px;
-}
-.search button, .primary {
-  border: 0;
-  background: var(--primary);
-  color: white;
-  border-radius: 25px;
-  padding: 10px 17px;
-}
-.actions { display: flex; gap: 8px; }
-.icon-btn {
-  background: #f3edff;
-  color: var(--primary);
-  border: 0;
-  border-radius: 13px;
-  padding: 11px;
-  font-weight: 700;
-}
-main {
-  max-width: 1200px;
-  margin: auto;
-  padding: 20px 16px 90px;
-}
-.hero {
-  border-radius: 26px;
-  padding: 34px;
-  min-height: 270px;
-  color: white;
-  background: linear-gradient(120deg,#5720c5,#8b5cf6 60%,#ff6585);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  overflow: hidden;
-}
-.hero h1 {
-  font-size: clamp(30px,5vw,52px);
-  margin: 10px 0;
-  line-height: 1.15;
-}
-.hero p { line-height: 1.8; max-width: 480px; }
-.hero-art {
-  font-size: clamp(75px,13vw,145px);
-  filter: drop-shadow(0 15px 20px #32116b55);
-}
-.pill {
-  display: inline-block;
-  background: #ffffff28;
-  padding: 7px 13px;
-  border-radius: 30px;
-  font-size: 13px;
-}
-.section { margin-top: 34px; }
-.section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-.section h2 { margin: 0; font-size: 22px; }
-.muted { color: var(--muted); font-size: 14px; }
-.categories {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  padding: 3px 0 10px;
-}
-.cat {
-  flex: 0 0 100px;
-  border: 1px solid #eee7fa;
-  background: white;
-  border-radius: 18px;
-  padding: 15px 8px;
-  text-align: center;
-  color: var(--text);
-  transition: .2s;
-}
-.cat:hover, .cat.active {
-  border-color: var(--primary);
-  transform: translateY(-3px);
-  background: #f0e8ff;
-}
-.cat-icon { display: block; font-size: 29px; margin-bottom: 8px; }
-.grid {
-  display: grid;
-  grid-template-columns: repeat(4,minmax(0,1fr));
-  gap: 16px;
-}
-.card {
-  background: white;
-  border-radius: var(--radius);
-  overflow: hidden;
-  border: 1px solid #eeeaf5;
-  transition: transform .2s, box-shadow .2s;
-}
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 28px #36205e12;
-}
-.product-image {
-  background: linear-gradient(145deg,#f2eaff,#ffeaf0);
-  height: 170px;
-  display: grid;
-  place-items: center;
-  position: relative;
-}
-.product-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  padding: 12px;
-}
-.emoji { font-size: 65px; }
-.discount {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: var(--secondary);
-  color: white;
-  font-size: 12px;
-  border-radius: 20px;
-  padding: 5px 8px;
-}
-.heart {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  border: 0;
-  border-radius: 50%;
-  width: 34px;
-  height: 34px;
-  background: white;
-  font-size: 17px;
-}
-.product-info { padding: 13px; }
-.product-info h3 {
-  font-size: 15px;
-  margin: 0 0 9px;
-  min-height: 40px;
-}
-.rating { color: #e89b12; font-size: 13px; }
-.price { font-weight: 800; font-size: 18px; margin-top: 8px; }
-.old {
-  color: #999;
-  text-decoration: line-through;
-  font-size: 12px;
-  font-weight: 400;
-  margin-left: 5px;
-}
-.add {
-  width: 100%;
-  margin-top: 12px;
-  border: 0;
-  border-radius: 12px;
-  background: #eee6ff;
-  color: var(--primary);
-  font-weight: 750;
-  padding: 10px 5px;
-}
-.add:hover { background: var(--primary); color: white; }
-.promo {
-  background: #fff0f3;
-  border: 1px solid #ffdae3;
-  border-radius: 22px;
-  padding: 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 15px;
-}
-.promo h2 { margin: 0 0 8px; }
-footer {
-  background: #211536;
-  color: white;
-  padding: 32px 18px;
-  text-align: center;
-  line-height: 1.9;
-}
-footer p { color: #d5cce3; }
-.bottom-nav {
-  display: none;
-  position: fixed;
-  z-index: 8;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  border-top: 1px solid #eee8f5;
-  justify-content: space-around;
-  padding: 9px 3px calc(9px + env(safe-area-inset-bottom));
-}
-.bottom-nav button {
-  border: 0;
-  background: transparent;
-  color: #77718a;
-  font-size: 12px;
-}
-.bottom-nav span { display: block; font-size: 21px; margin-bottom: 2px; }
-.empty {
-  text-align: center;
-  padding: 35px;
-  color: var(--muted);
-  grid-column: 1/-1;
-}
-.toast {
-  position: fixed;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #211536;
-  color: white;
-  border-radius: 25px;
-  padding: 12px 20px;
-  z-index: 20;
-  display: none;
-  box-shadow: 0 8px 25px #0002;
-}
-.modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 15;
-  background: #17102288;
-  padding: 18px;
-  align-items: center;
-  justify-content: center;
-}
-.modal.show { display: flex; }
-.modal-box {
-  background: white;
-  width: min(460px,100%);
-  max-height: 85vh;
-  overflow: auto;
-  padding: 23px;
-  border-radius: 22px;
-}
-.modal-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.modal-head h2 { margin-top: 0; }
-.close {
-  border: 0;
-  background: #f2edfa;
-  border-radius: 10px;
-  padding: 8px 12px;
-}
-.cart-line {
-  display: flex;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid #eee;
-  align-items: center;
-}
-.cart-line .grow { flex: 1; }
-.qty { display: flex; align-items: center; gap: 10px; margin-top: 7px; }
-.qty button {
-  border: 0;
-  border-radius: 7px;
-  background: #eee6ff;
-  padding: 4px 10px;
-}
-.total { font-weight: 800; font-size: 20px; margin: 18px 0; }
-@media(max-width:850px) {
-  .grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
-  .product-image { height: 150px; }
-  .top { flex-wrap: wrap; }
-  .search { order: 3; flex-basis: 100%; max-width: none; }
-}
-@media(max-width:560px) {
-  .top { gap: 10px; padding: 12px; }
-  .logo { font-size: 20px; }
-  .actions { gap: 5px; }
-  .icon-btn { padding: 9px; }
-  main { padding: 14px 12px 100px; }
-  .hero { padding: 23px 18px; min-height: 225px; }
-  .hero h1 { font-size: 30px; }
-  .hero-art { font-size: 65px; }
-  .hero p { font-size: 13px; }
-  .grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }
-  .product-image { height: 145px; }
-  .product-info { padding: 10px; }
-  .product-info h3 { font-size: 14px; }
-  .price { font-size: 16px; }
-  .section h2 { font-size: 19px; }
-  .bottom-nav { display: flex; }
-  .promo { padding: 18px; }
-}
-</style>
-</head>
-<body>
-
-<header>
-  <div class="top">
-    <div class="logo">OfferFizz <span>BD</span></div>
-
-    <form class="search" id="searchForm">
-      <input id="searchInput" placeholder="আপনার পছন্দের পণ্য খুঁজুন..." />
-      <button type="submit">🔎</button>
-    </form>
-
-    <div class="actions">
-      <button class="icon-btn" onclick="openAccount()">👤</button>
-      <button class="icon-btn" onclick="openCart()">🛒 <b id="cartCount">0</b></button>
-    </div>
-  </div>
-</header>
-
-<main>
-  <section class="hero">
-    <div>
-      <span class="pill">✨ আপনার কেনাকাটায় বিশেষ অফার</span>
-      <h1>সেরা পণ্য,<br>সেরা দামে!</h1>
-      <p>আপনার পছন্দের পণ্য কিনুন সহজে। আকর্ষণীয় অফার ও দারুণ সব কালেকশন এক জায়গায়।</p>
-      <button class="primary" onclick="scrollProducts()">এখনই কেনাকাটা করুন →</button>
-    </div>
-    <div class="hero-art">🛍️</div>
-  </section>
-
-  <section class="section">
-    <div class="section-head">
-      <h2>🧩 ক্যাটাগরি</h2>
-      <span class="muted">পছন্দ করুন</span>
-    </div>
-    <div class="categories" id="categories"></div>
-  </section>
-
-  <section class="section" id="sale">
-    <div class="promo">
-      <div>
-        <h2>🔥 দারুণ সব অফার!</h2>
-        <div class="muted">ডিসকাউন্টের পণ্যগুলো ঘুরে দেখুন।</div>
-      </div>
-      <button class="primary" onclick="showOffers()">অফার দেখুন</button>
-    </div>
-  </section>
-
-  <section class="section" id="productsSection">
-    <div class="section-head">
-      <div>
-        <h2 id="sectionTitle">✨ জনপ্রিয় পণ্য</h2>
-        <div class="muted">আপনার পছন্দের কালেকশন</div>
-      </div>
-      <select id="sort" onchange="renderProducts()"
-        style="max-width:135px;padding:9px;border-radius:12px;border:1px solid #e6dff0;background:white">
-        <option value="popular">জনপ্রিয়</option>
-        <option value="low">কম দাম</option>
-        <option value="high">বেশি দাম</option>
-        <option value="name">নাম অনুযায়ী</option>
-      </select>
-    </div>
-    <div class="grid" id="productGrid"></div>
-  </section>
-</main>
-
-<footer>
-  <div class="logo" style="color:white">OfferFizz <span>BD</span></div>
-  <p>আপনার অনলাইন কেনাকাটার সহজ ঠিকানা।</p>
-  <p>যোগাযোগ | শর্তাবলি | প্রাইভেসি পলিসি</p>
-  <small>© <span id="year"></span> OfferFizz BD. সর্বস্বত্ব সংরক্ষিত।</small>
-</footer>
-
-<nav class="bottom-nav">
-  <button onclick="window.scrollTo({top:0,behavior:'smooth'})"><span>🏠</span>হোম</button>
-  <button onclick="focusSearch()"><span>🔎</span>সার্চ</button>
-  <button onclick="openCart()"><span>🛒</span>কার্ট</button>
-  <button onclick="openAccount()"><span>👤</span>অ্যাকাউন্ট</button>
-</nav>
-
-<div class="modal" id="modal" onclick="if(event.target===this)closeModal()">
-  <div class="modal-box">
-    <div class="modal-head">
-      <h2 id="modalTitle">আপনার কার্ট</h2>
-      <button class="close" onclick="closeModal()">✕</button>
-    </div>
-    <div id="modalContent"></div>
-  </div>
-</div>
-<div class="toast" id="toast"></div>
-
-<script>
-const categories = [
-  {name:"সব পণ্য", icon:"✨"},
-  {name:"ইলেকট্রনিক্স", icon:"🎧"},
-  {name:"ফ্যাশন", icon:"👕"},
-  {name:"বিউটি", icon:"💄"},
-  {name:"হোম", icon:"🏠"},
-  {name:"গ্যাজেটস", icon:"⌚"},
-  {name:"অ্যাকসেসরিজ", icon:"🎒"}
+const INITIAL_PRODUCTS = [
+  {
+    id: 1,
+    name: "Exclusive Padding Jacket for Men 🧥",
+    regularPrice: 1800,
+    price: 1300,
+    category: "Fashion",
+    images: [
+      "https://images.unsplash.com/photo-1544441893-675973e31985?w=500&q=80"
+    ],
+    description: "🔥 Exclusive European Style Winter Jacket\n✨ Stylish and comfortable for winter\n📏 Size Chart: M, L, XL",
+    sizes: ["M", "L", "XL"],
+    stock: 15
+  },
+  {
+    id: 2,
+    name: "Stylish Denim Jacket for Winter",
+    regularPrice: 1500,
+    price: 1050,
+    category: "Fashion",
+    images: [
+      "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&q=80"
+    ],
+    description: "High quality premium denim jacket for men.",
+    sizes: ["M", "L", "XL"],
+    stock: 10
+  },
+  {
+    id: 3,
+    name: "Chinese Winter Shacket Jacket",
+    regularPrice: 1800,
+    price: 1400,
+    category: "Fashion",
+    images: [
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80"
+    ],
+    description: "Exclusive winter shacket jacket with soft lining.",
+    sizes: ["M", "L", "XL"],
+    stock: 8
+  }
 ];
 
-// এগুলো নমুনা পণ্য। বাস্তব ব্যবহারের আগে নিজের পণ্য যুক্ত করুন।
-const products = [
-  {id:1,name:"ওয়্যারলেস হেডফোন",category:"ইলেকট্রনিক্স",price:1250,old:1650,emoji:"🎧",rating:4.8,pop:98},
-  {id:2,name:"স্মার্ট ওয়াচ",category:"গ্যাজেটস",price:1850,old:2400,emoji:"⌚",rating:4.7,pop:95},
-  {id:3,name:"স্টাইলিশ ব্যাকপ্যাক",category:"অ্যাকসেসরিজ",price:950,old:1250,emoji:"🎒",rating:4.6,pop:87},
-  {id:4,name:"প্রিমিয়াম সানগ্লাস",category:"ফ্যাশন",price:550,old:750,emoji:"🕶️",rating:4.5,pop:84},
-  {id:5,name:"স্কিন কেয়ার সেট",category:"বিউটি",price:780,old:990,emoji:"🧴",rating:4.8,pop:92},
-  {id:6,name:"ডেস্ক ল্যাম্প",category:"হোম",price:690,old:890,emoji:"💡",rating:4.4,pop:72},
-  {id:7,name:"স্পোর্টস জুতা",category:"ফ্যাশন",price:1450,old:1900,emoji:"👟",rating:4.7,pop:89},
-  {id:8,name:"ব্লুটুথ স্পিকার",category:"ইলেকট্রনিক্স",price:1150,old:1490,emoji:"🔊",rating:4.6,pop:91}
-];
-
-let activeCategory = "সব পণ্য";
-let offersOnly = false;
-let cart = {};
-let wishlist = new Set();
-
-try {
-  cart = JSON.parse(localStorage.getItem("ofb-cart") || "{}");
-  wishlist = new Set(JSON.parse(localStorage.getItem("ofb-wishlist") || "[]"));
-} catch(e) {
-  cart = {};
-  wishlist = new Set();
-}
-
-const money = n => "৳" + Number(n).toLocaleString("en-BD");
-const save = () => {
-  localStorage.setItem("ofb-cart",JSON.stringify(cart));
-  localStorage.setItem("ofb-wishlist",JSON.stringify([...wishlist]));
+const INITIAL_SETTINGS = {
+  storeName: "OfferFizz BD",
+  bannerTitle: "Welcome to OfferFizz BD!",
+  bannerSubtitle: "কম দামে সেরা অফারে প্রিমিয়াম প্রোডাক্ট কিনুন।",
+  bannerImage: "",
+  bkashNumber: "01700000000",
+  nagadNumber: "01700000000",
+  contactPhone: "01700000000",
+  contactEmail: "support@offerfizzbd.com",
+  facebookUrl: "https://facebook.com",
+  whatsappUrl: "https://wa.me/8801700000000",
+  superAdminUser: "admin",
+  superAdminPass: "1234"
 };
 
-function renderCategories() {
-  document.getElementById("categories").innerHTML = categories.map(c => `
-    <button class="cat ${activeCategory===c.name?'active':''}"
-      onclick="selectCategory('${c.name}')">
-      <span class="cat-icon">${c.icon}</span>${c.name}
-    </button>
-  `).join("");
-}
+const INITIAL_CATEGORIES = ['All', 'Fashion', 'Gadgets', 'Electronics', 'Beauty'];
 
-function selectCategory(name) {
-  activeCategory = name;
-  offersOnly = false;
-  document.getElementById("sectionTitle").textContent =
-    name === "সব পণ্য" ? "✨ জনপ্রিয় পণ্য" : name;
-  renderCategories();
-  renderProducts();
-  document.getElementById("productsSection").scrollIntoView({behavior:"smooth"});
-}
+export default function App() {
+  const [products, setProducts] = useState(() => JSON.parse(localStorage.getItem('offerfizz_products')) || INITIAL_PRODUCTS);
+  const [orders, setOrders] = useState(() => JSON.parse(localStorage.getItem('offerfizz_orders')) || []);
+  const [settings, setSettings] = useState(() => JSON.parse(localStorage.getItem('offerfizz_settings')) || INITIAL_SETTINGS);
+  const [categories, setCategories] = useState(() => JSON.parse(localStorage.getItem('offerfizz_categories')) || INITIAL_CATEGORIES);
 
-function renderProducts() {
-  const query = document.getElementById("searchInput").value.trim().toLowerCase();
-  let list = products.filter(p => {
-    const matchCategory = activeCategory==="সব পণ্য" || p.category===activeCategory;
-    const matchQuery = (p.name+" "+p.category).toLowerCase().includes(query);
-    const matchOffer = !offersOnly || p.old>p.price;
-    return matchCategory && matchQuery && matchOffer;
+  const [activeTab, setActiveTab] = useState('home'); 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [viewProductDetails, setViewProductDetails] = useState(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+  const [customerUser, setCustomerUser] = useState(() => JSON.parse(localStorage.getItem('offerfizz_customer')) || null);
+  const [customerForm, setCustomerForm] = useState({ name: '', mobile: '', address: '', password: '' });
+  const [isCustomerAuthMode, setIsCustomerAuthMode] = useState('login');
+
+  const [orderForm, setOrderForm] = useState({
+    name: '', mobile: '', address: '', size: '',
+    deliveryArea: 'outside', paymentMethod: 'COD',
+    trxId: '', paymentScreenshot: ''
   });
 
-  const sort = document.getElementById("sort").value;
-  if(sort==="low") list.sort((a,b)=>a.price-b.price);
-  if(sort==="high") list.sort((a,b)=>b.price-a.price);
-  if(sort==="name") list.sort((a,b)=>a.name.localeCompare(b.name));
-  if(sort==="popular") list.sort((a,b)=>b.pop-a.pop);
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [adminUsernameInput, setAdminUsernameInput] = useState('');
+  const [adminPasswordInput, setAdminPasswordInput] = useState('');
+  const [adminSection, setAdminSection] = useState('products');
 
-  document.getElementById("productGrid").innerHTML = list.length
-    ? list.map(p => `
-      <article class="card">
-        <div class="product-image">
-          <span class="emoji">${p.emoji}</span>
-          <span class="discount">${Math.round((1-p.price/p.old)*100)}% OFF</span>
-          <button class="heart" aria-label="উইশলিস্ট"
-            onclick="toggleWish(${p.id})">${wishlist.has(p.id)?"❤️":"🤍"}</button>
-        </div>
-        <div class="product-info">
-          <h3>${p.name}</h3>
-          <div class="rating">★ ${p.rating} <span class="muted">(${p.pop}+) </span></div>
-          <div class="price">${money(p.price)}
-            <span class="old">${money(p.old)}</span>
+  const [editingProductId, setEditingProductId] = useState(null);
+  const [productForm, setProductForm] = useState({
+    name: '', regularPrice: '', price: '', category: 'Fashion',
+    images: [], description: '', sizes: 'M, L, XL', stock: 10
+  });
+
+  const [newCatName, setNewCatName] = useState('');
+  const [passForm, setPassForm] = useState({ oldPass: '', newPass: '', confirmPass: '' });
+
+  useEffect(() => { localStorage.setItem('offerfizz_products', JSON.stringify(products)); }, [products]);
+  useEffect(() => { localStorage.setItem('offerfizz_orders', JSON.stringify(orders)); }, [orders]);
+  useEffect(() => { localStorage.setItem('offerfizz_settings', JSON.stringify(settings)); }, [settings]);
+  useEffect(() => { localStorage.setItem('offerfizz_categories', JSON.stringify(categories)); }, [categories]);
+
+  const handleMultipleImagesUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      Promise.all(files.map(file => new Promise(res => {
+        const reader = new FileReader();
+        reader.onloadend = () => res(reader.result);
+        reader.readAsDataURL(file);
+      }))).then(imgs => setProductForm(prev => ({ ...prev, images: [...prev.images, ...imgs] })));
+    }
+  };
+
+  const handleBannerUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setSettings(prev => ({ ...prev, bannerImage: reader.result }));
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleScreenshotUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setOrderForm(prev => ({ ...prev, paymentScreenshot: reader.result }));
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const openOrderModal = (product) => {
+    setSelectedProduct(product);
+    setViewProductDetails(null);
+    setOrderForm({
+      name: customerUser ? customerUser.name : '',
+      mobile: customerUser ? customerUser.mobile : '',
+      address: customerUser ? customerUser.address : '',
+      size: product.sizes?.[0] || 'Standard',
+      deliveryArea: 'outside', paymentMethod: 'COD', trxId: '', paymentScreenshot: ''
+    });
+  };
+
+  const handleConfirmOrder = (e) => {
+    e.preventDefault();
+    if (!orderForm.name || !orderForm.mobile || !orderForm.address) return alert("দয়া করে নাম, মোবাইল এবং ঠিকানা দিন।");
+    if ((orderForm.paymentMethod === 'bKash' || orderForm.paymentMethod === 'Nagad') && (!orderForm.trxId || !orderForm.paymentScreenshot)) {
+      return alert("দয়া করে TrxID এবং পেমেন্ট স্ক্রিনশট আপলোড করুন।");
+    }
+
+    const deliveryCharge = orderForm.deliveryArea === 'inside' ? 60 : 120;
+    const newOrder = {
+      id: "ORD-" + Date.now().toString().slice(-6),
+      productName: selectedProduct.name,
+      productImage: selectedProduct.images?.[0] || '',
+      productPrice: selectedProduct.price,
+      size: orderForm.size, customerName: orderForm.name, mobile: orderForm.mobile, address: orderForm.address,
+      deliveryArea: orderForm.deliveryArea, deliveryCharge, totalAmount: selectedProduct.price + deliveryCharge,
+      paymentMethod: orderForm.paymentMethod, trxId: orderForm.trxId || 'N/A', paymentScreenshot: orderForm.paymentScreenshot || null,
+      status: 'Pending', date: new Date().toLocaleDateString('bn-BD')
+    };
+
+    setOrders([newOrder, ...orders]);
+    setSelectedProduct(null);
+    alert("আপনার অর্ডারটি সফলভাবে গৃহীত হয়েছে! অর্ডার আইডি: " + newOrder.id);
+  };
+
+  const filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) && (selectedCategory === 'All' || p.category === selectedCategory));
+
+  const handleAdminLogin = (e) => {
+    e.preventDefault();
+    if (adminUsernameInput.trim() === 'admin' && adminPasswordInput.trim() === '1234') {
+      setIsAdminLoggedIn(true);
+    } else {
+      alert("ভুল ইউজারনেম বা পাসওয়ার্ড!");
+    }
+  };
+
+  const handleSaveProduct = (e) => {
+    e.preventDefault();
+    if (!productForm.name || !productForm.price) return alert("নাম এবং দাম আবশ্যক!");
+
+    if (editingProductId) {
+      setProducts(products.map(p => p.id === editingProductId ? {
+        ...p, name: productForm.name, regularPrice: Number(productForm.regularPrice) || Number(productForm.price),
+        price: Number(productForm.price), category: productForm.category, images: productForm.images.length > 0 ? productForm.images : p.images,
+        description: productForm.description, sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['Standard'], stock: Number(productForm.stock)
+      } : p));
+      setEditingProductId(null);
+      alert("প্রোডাক্ট আপডেট হয়েছে!");
+    } else {
+      setProducts([{
+        id: Date.now(), name: productForm.name, regularPrice: Number(productForm.regularPrice) || Number(productForm.price),
+        price: Number(productForm.price), category: productForm.category, images: productForm.images.length > 0 ? productForm.images : ["https://via.placeholder.com/150"],
+        description: productForm.description || "প্রিমিয়াম প্রোডাক্ট।", sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['Standard'], stock: Number(productForm.stock)
+      }, ...products]);
+      alert("নতুন প্রোডাক্ট যুক্ত হয়েছে!");
+    }
+    setProductForm({ name: '', regularPrice: '', price: '', category: 'Fashion', images: [], description: '', sizes: 'M, L, XL', stock: 10 });
+  };
+
+  const handleEditProductClick = (product) => {
+    setEditingProductId(product.id);
+    setProductForm({
+      name: product.name, regularPrice: product.regularPrice || product.price, price: product.price,
+      category: product.category, images: product.images || [], description: product.description,
+      sizes: product.sizes ? product.sizes.join(', ') : 'Standard', stock: product.stock
+    });
+  };
+
+  const deleteProduct = (id) => {
+    if (window.confirm("প্রোডাক্টটি মুছে ফেলতে চান?")) {
+      setProducts(products.filter(p => p.id !== id));
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 text-gray-800 pb-20 flex flex-col justify-between">
+      <div>
+        <header className="bg-white shadow-sm border-b sticky top-0 z-20 px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setActiveTab('home')}>
+            <span className="text-2xl">🛍️</span>
+            <h1 className="text-xl font-bold text-purple-700">{settings.storeName}</h1>
           </div>
-          <button class="add" onclick="addToCart(${p.id})">＋ কার্টে যোগ করুন</button>
-        </div>
-      </article>
-    `).join("")
-    : `<div class="empty">😕<p>কোনো পণ্য পাওয়া যায়নি।</p></div>`;
-}
+          <div className="flex items-center gap-2">
+            <button onClick={() => setActiveTab('profile')} className="text-xs bg-gray-100 px-2.5 py-1.5 rounded-lg font-bold">👤 Profile</button>
+            <button onClick={() => setActiveTab('admin')} className="text-xs bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg font-bold">🔑 Admin</button>
+          </div>
+        </header>
 
-function addToCart(id) {
-  cart[id] = (cart[id] || 0) + 1;
-  save();
-  updateCount();
-  toast("পণ্য কার্টে যোগ হয়েছে!");
-}
+        {activeTab === 'home' && (
+          <main>
+            <div className="p-3 bg-white border-b">
+              <input type="text" placeholder="🔍 প্রোডাক্ট খুঁজুন..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-gray-100 rounded-xl px-4 py-2 text-xs" />
+            </div>
 
-function toggleWish(id) {
-  wishlist.has(id) ? wishlist.delete(id) : wishlist.add(id);
-  save();
-  renderProducts();
-  toast(wishlist.has(id) ? "উইশলিস্টে যোগ হয়েছে" : "উইশলিস্ট থেকে সরানো হয়েছে");
-}
+            <div className="p-3">
+              {settings.bannerImage ? (
+                <div className="rounded-2xl overflow-hidden h-36"><img src={settings.bannerImage} alt="Banner" className="w-full h-full object-cover" /></div>
+              ) : (
+                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 rounded-2xl shadow-md">
+                  <h2 className="text-lg font-bold mb-1">{settings.bannerTitle}</h2>
+                  <p className="text-xs opacity-90">{settings.bannerSubtitle}</p>
+                </div>
+              )}
+            </div>
 
-function updateCount() {
-  document.getElementById("cartCount").textContent =
-    Object.values(cart).reduce((a,b)=>a+b,0);
-}
+            <div className="px-3 mb-3 flex gap-2 overflow-x-auto pb-1">
+              {categories.map((cat) => (
+                <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-3 py-1 rounded-full text-xs font-semibold ${selectedCategory === cat ? 'bg-purple-700 text-white' : 'bg-white text-gray-600 border'}`}>{cat}</button>
+              ))}
+            </div>
 
-function openCart() {
-  document.getElementById("modalTitle").textContent = "🛒 আপনার শপিং কার্ট";
-  const entries = Object.entries(cart).filter(([id,q])=>q>0);
-  let subtotal = 0;
+            <div className="px-3">
+              <h3 className="text-xs font-bold text-gray-700 mb-2">সকল প্রোডাক্ট ({filteredProducts.length})</h3>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+                {filteredProducts.map((product) => (
+                  <div key={product.id} className="bg-white rounded-xl shadow-sm border overflow-hidden flex flex-col justify-between">
+                    <div onClick={() => { setViewProductDetails(product); setActiveImageIndex(0); }} className="cursor-pointer">
+                      <img src={product.images?.[0] || "https://via.placeholder.com/150"} alt={product.name} className="w-full h-36 object-cover" />
+                      <div className="p-2.5">
+                        <h4 className="font-semibold text-xs line-clamp-2 leading-snug">{product.name}</h4>
+                        <div className="mt-2 flex items-baseline justify-between">
+                          <div>
+                            <span className="text-sm font-bold text-purple-700">৳ {product.price}</span>
+                            {product.regularPrice > product.price && <span className="text-[10px] text-gray-400 line-through ml-1">৳ {product.regularPrice}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-2 pt-0">
+                      <button onClick={() => openOrderModal(product)} className="w-full bg-emerald-600 text-white text-xs font-semibold py-2 rounded-lg">Order Now</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </main>
+        )}
 
-  const lines = entries.map(([id,q]) => {
-    const p = products.find(x=>x.id===Number(id));
-    if(!p) return "";
-    subtotal += p.price*q;
-    return `<div class="cart-line">
-      <div style="font-size:30px">${p.emoji}</div>
-      <div class="grow">
-        <b>${p.name}</b>
-        <div>${money(p.price)} × ${q}</div>
-        <div class="qty">
-          <button onclick="changeQty(${p.id},-1)">−</button>
-          <span>${q}</span>
-          <button onclick="changeQty(${p.id},1)">＋</button>
-          <button onclick="removeItem(${p.id})">🗑️</button>
+        {activeTab === 'admin' && (
+          <main className="p-4 max-w-2xl mx-auto text-xs">
+            {!isAdminLoggedIn ? (
+              <form onSubmit={handleAdminLogin} className="bg-white p-5 rounded-2xl shadow-md border max-w-sm mx-auto space-y-3">
+                <h3 className="font-bold text-center text-sm">Admin Login</h3>
+                <input type="text" placeholder="Username (admin)" value={adminUsernameInput} onChange={(e) => setAdminUsernameInput(e.target.value)} className="w-full border rounded-xl p-2" />
+                <input type="password" placeholder="Password (1234)" value={adminPasswordInput} onChange={(e) => setAdminPasswordInput(e.target.value)} className="w-full border rounded-xl p-2" />
+                <button type="submit" className="w-full bg-purple-700 text-white font-bold py-2 rounded-xl">Login</button>
+              </form>
+            ) : (
+              <div>
+                <div className="flex justify-between items-center mb-4 bg-purple-900 text-white p-3 rounded-xl">
+                  <h2 className="font-bold">Admin Dashboard</h2>
+                  <button onClick={() => setIsAdminLoggedIn(false)} className="bg-purple-800 px-2.5 py-1 rounded">Logout</button>
+                </div>
+                <div className="flex gap-2 mb-4 border-b pb-2 overflow-x-auto">
+                  {['dashboard', 'orders', 'products', 'settings'].map(tab => (
+                    <button key={tab} onClick={() => setAdminSection(tab)} className={`px-3 py-1 rounded-lg capitalize font-bold ${adminSection === tab ? 'bg-purple-700 text-white' : 'bg-white border'}`}>{tab}</button>
+                  ))}
+                </div>
+
+                {adminSection === 'dashboard' && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white p-3 rounded-xl border">Total Orders: <h3 className="text-lg font-bold">{orders.length}</h3></div>
+                    <div className="bg-white p-3 rounded-xl border">Sales: <h3 className="text-lg font-bold text-emerald-600">৳ {orders.reduce((sum, o) => sum + o.totalAmount, 0)}</h3></div>
+                  </div>
+                )}
+
+                {adminSection === 'orders' && (
+                  <div className="space-y-3">
+                    {orders.length === 0 ? <p className="text-center bg-white p-4 rounded-xl border text-gray-500">কোনো অর্ডার নেই</p> : (
+                      orders.map(ord => (
+                        <div key={ord.id} className="bg-white p-3 rounded-xl border space-y-1">
+                          <div className="flex justify-between font-bold text-purple-700"><span>{ord.id}</span><span>{ord.status}</span></div>
+                          <p><strong>প্রোডাক্ট:</strong> {ord.productName} ({ord.size})</p>
+                          <p><strong>কাস্টমার:</strong> {ord.customerName} ({ord.mobile})</p>
+                          <p><strong>ঠিকানা:</strong> {ord.address}</p>
+                          <p><strong>পেমেন্ট:</strong> {ord.paymentMethod} | TrxID: {ord.trxId}</p>
+                          <p className="font-bold text-emerald-700">মোট: ৳{ord.totalAmount}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {adminSection === 'products' && (
+                  <div className="space-y-4">
+                    <form onSubmit={handleSaveProduct} className="bg-white p-3.5 rounded-xl border space-y-2">
+                      <h3 className="font-bold border-b pb-1 text-purple-800">{editingProductId ? "✏️ প্রোডাক্ট এডিট করুন" : "➕ নতুন প্রোডাক্ট যুক্ত করুন (পোস্ট করুন)"}</h3>
+                      <input type="text" placeholder="প্রোডাক্ট নাম" value={productForm.name} onChange={(e) => setProductForm({ ...productForm, name: e.target.value })} className="border p-2 rounded w-full" required />
+                      <div className="grid grid-cols-2 gap-2">
+                        <input type="number" placeholder="আগের দাম (৳)" value={productForm.regularPrice} onChange={(e) => setProductForm({ ...productForm, regularPrice: e.target.value })} className="border p-2 rounded" />
+                        <input type="number" placeholder="অফার দাম (৳)" value={productForm.price} onChange={(e) => setProductForm({ ...productForm, price: e.target.value })} className="border p-2 rounded" required />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-gray-600 mb-1">প্রোডাক্ট ছবি নির্বাচন করুন:</label>
+                        <input type="file" accept="image/*" multiple onChange={handleMultipleImagesUpload} className="border p-1.5 rounded w-full bg-gray-50" />
+                      </div>
+                      <textarea placeholder="প্রোডাক্ট বিবরণ..." value={productForm.description} onChange={(e) => setProductForm({ ...productForm, description: e.target.value })} className="border p-2 rounded w-full" rows="3"></textarea>
+                      <input type="text" placeholder="সাইজসমূহ (যেমন: M, L, XL)" value={productForm.sizes} onChange={(e) => setProductForm({ ...productForm, sizes: e.target.value })} className="border p-2 rounded w-full" />
+                      <button type="submit" className="bg-emerald-600 text-white font-bold py-2 rounded w-full">{editingProductId ? "আপডেট করুন" : "পাবলিশ / পোস্ট করুন"}</button>
+                    </form>
+
+                    <div className="space-y-2">
+                      <h4 className="font-bold">বিদ্যমান প্রোডাক্টসমূহ:</h4>
+                      {products.map(p => (
+                        <div key={p.id} className="bg-white p-2 rounded-xl border flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <img src={p.images?.[0] || ''} alt={p.name} className="w-10 h-10 object-cover rounded" />
+                            <div><p className="font-bold line-clamp-1">{p.name}</p><span className="text-purple-700">৳{p.price}</span></div>
+                          </div>
+                          <div className="flex gap-1">
+                            <button onClick={() => handleEditProductClick(p)} className="bg-blue-50 text-blue-600 font-bold px-2 py-1 rounded">✏️ Edit</button>
+                            <button onClick={() => deleteProduct(p.id)} className="bg-red-50 text-red-500 font-bold px-2 py-1 rounded">✕</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                 {adminSection === 'settings' && (
+                  <div className="space-y-4">
+                    <div className="bg-white p-3 rounded-xl border space-y-2">
+                      <h3 className="font-bold border-b pb-1">ওয়েবসাইট সেটিংস</h3>
+                      <label className="block font-semibold">স্টোর নাম:</label>
+                      <input type="text" value={settings.storeName} onChange={(e) => setSettings({ ...settings, storeName: e.target.value })} className="w-full border rounded p-2" />
+                      <label className="block font-semibold mt-2">হোমপেজ ব্যানার আপলোড:</label>
+                      <input type="file" accept="image/*" onChange={handleBannerUpload} className="w-full border p-1 rounded bg-gray-50" />
+                    </div>
+
+                    <div className="bg-white p-3 rounded-xl border space-y-2">
+                      <h3 className="font-bold border-b pb-1">পেমেন্ট নম্বর সেটিংস</h3>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div><label className="block font-semibold mb-1">bKash নম্বর:</label><input type="text" value={settings.bkashNumber} onChange={(e) => setSettings({ ...settings, bkashNumber: e.target.value })} className="border rounded p-2 w-full" /></div>
+                        <div><label className="block font-semibold mb-1">Nagad নম্বর:</label><input type="text" value={settings.nagadNumber} onChange={(e) => setSettings({ ...settings, nagadNumber: e.target.value })} className="border rounded p-2 w-full" /></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </main>
+        )}
+
+        {selectedProduct && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 text-xs">
+            <div className="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between font-bold border-b pb-2"><h3 className="text-emerald-700 text-sm">Confirm Order</h3><button onClick={() => setSelectedProduct(null)} className="text-gray-500">✕</button></div>
+              <form onSubmit={handleConfirmOrder} className="space-y-2">
+                <div><label className="block font-bold mb-1">Product:</label><p className="bg-gray-100 p-2 rounded">{selectedProduct.name}</p></div>
+                <div><label className="block font-bold mb-1">Your Name:</label><input type="text" placeholder="Enter your name" required value={orderForm.name} onChange={(e) => setOrderForm({ ...orderForm, name: e.target.value })} className="w-full border rounded p-2" /></div>
+                <div><label className="block font-bold mb-1">Mobile Number:</label><input type="tel" placeholder="01XXXXXXXXX" required value={orderForm.mobile} onChange={(e) => setOrderForm({ ...orderForm, mobile: e.target.value })} className="w-full border rounded p-2" /></div>
+                <div><label className="block font-bold mb-1">Full Address:</label><textarea placeholder="Your address" required value={orderForm.address} onChange={(e) => setOrderForm({ ...orderForm, address: e.target.value })} className="w-full border rounded p-2" rows="2"></textarea></div>
+                
+                <div>
+                  <label className="block font-bold mb-1">Select Size:</label>
+                  <select value={orderForm.size} onChange={(e) => setOrderForm({ ...orderForm, size: e.target.value })} className="w-full border rounded p-2 bg-white">
+                    {selectedProduct.sizes?.map((sz, idx) => <option key={idx} value={sz}>{sz}</option>)}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1">Delivery Area:</label>
+                  <select value={orderForm.deliveryArea} onChange={(e) => setOrderForm({ ...orderForm, deliveryArea: e.target.value })} className="w-full border rounded p-2 bg-white">
+                    <option value="outside">Outside Dhaka — (Charge: ৳120)</option>
+                    <option value="inside">Inside Dhaka — (Charge: ৳60)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1">Payment Method:</label>
+                  <select value={orderForm.paymentMethod} onChange={(e) => setOrderForm({ ...orderForm, paymentMethod: e.target.value })} className="w-full border rounded p-2 bg-white">
+                    <option value="COD">Cash on Delivery (COD)</option>
+                    <option value="bKash">bKash Personal ({settings.bkashNumber})</option>
+                    <option value="Nagad">Nagad Personal ({settings.nagadNumber})</option>
+                  </select>
+                </div>
+
+                {(orderForm.paymentMethod === 'bKash' || orderForm.paymentMethod === 'Nagad') && (
+                  <div className="bg-purple-50 p-2 rounded-xl border space-y-2">
+                    <p className="text-[11px] text-purple-800 font-semibold">টাকা পাঠিয়ে TrxID এবং স্ক্রিনশট দিন:</p>
+                    <input type="text" placeholder="Enter TrxID" required value={orderForm.trxId} onChange={(e) => setOrderForm({ ...orderForm, trxId: e.target.value })} className="w-full border rounded p-1.5 bg-white" />
+                    <input type="file" accept="image/*" required onChange={handleScreenshotUpload} className="w-full bg-white border p-1 rounded" />
+                  </div>
+                )}
+
+                <div className="border-2 border-dashed border-emerald-500 bg-emerald-50 p-2 rounded-xl text-center font-bold text-emerald-800">
+                  Total: ৳ {selectedProduct.price + (orderForm.deliveryArea === 'inside' ? 60 : 120)}
+                </div>
+
+                <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-xl shadow-md">Confirm Order</button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
+          <button onClick={() => setActiveTab('home')} className={activeTab === 'home' ? 'text-purple-700 font-bold' : ''}>🛍️ Home</button>
+          <button onClick={() => setActiveTab('admin')} className={activeTab === 'admin' ? 'text-purple-700 font-bold' : ''}>🔑 Admin</button>
         </div>
       </div>
-      <b>${money(p.price*q)}</b>
-    </div>`;
-  }).join("");
 
-  document.getElementById("modalContent").innerHTML = entries.length
-    ? `${lines}
-      <div class="total">সাবটোটাল: ${money(subtotal)}</div>
-      <p class="muted">ডেলিভারি চার্জ ও চূড়ান্ত মূল্য চেকআউটে নিশ্চিত করতে হবে।</p>
-      <button class="primary" style="width:100%" onclick="checkout()">চেকআউট করুন →</button>`
-    : `<div class="empty">🛒<p>আপনার কার্ট খালি।</p></div>`;
-
-  document.getElementById("modal").classList.add("show");
-}
-
-function changeQty(id,delta) {
-  cart[id] = (cart[id] || 0) + delta;
-  if(cart[id]<=0) delete cart[id];
-  save(); updateCount(); openCart();
-}
-function removeItem(id) {
-  delete cart[id];
-  save(); updateCount(); openCart();
-}
-function checkout() {
-  document.getElementById("modalTitle").textContent = "চেকআউট";
-  document.getElementById("modalContent").innerHTML = `
-    <p class="muted">অর্ডার সম্পন্ন করতে আপনার তথ্য দিন।</p>
-    <form onsubmit="submitOrder(event)">
-      <label>আপনার নাম</label>
-      <input required name="name" style="${inputStyle}" placeholder="সম্পূর্ণ নাম">
-      <label>মোবাইল নম্বর</label>
-      <input required name="phone" inputmode="tel" style="${inputStyle}" placeholder="01XXXXXXXXX">
-      <label>সম্পূর্ণ ঠিকানা</label>
-      <textarea required name="address" style="${inputStyle}" placeholder="বাড়ি, এলাকা, জেলা"></textarea>
-      <button class="primary" style="width:100%;margin-top:15px">অর্ডার নিশ্চিত করুন</button>
-    </form>
-    <p class="muted">নোট: এই সংস্করণে অর্ডার সার্ভারে পাঠানো হয় না।</p>`;
-}
-
-const inputStyle = "display:block;width:100%;padding:12px;margin:7px 0 14px;border:1px solid #ddd5eb;border-radius:10px;background:white;color:#211a35";
-
-function submitOrder(e) {
-  e.preventDefault();
-  toast("ডেমো: বাস্তব অর্ডারের জন্য ব্যাকএন্ড সংযোগ প্রয়োজন।");
-}
-
-function openAccount() {
-  document.getElementById("modalTitle").textContent = "👤 আমার অ্যাকাউন্ট";
-  document.getElementById("modalContent").innerHTML = `
-    <p>OfferFizz BD-তে স্বাগতম!</p>
-    <p class="muted">বাস্তব লগইন ও রেজিস্ট্রেশনের জন্য Firebase Authentication যুক্ত করতে হবে।</p>
-    <button class="primary" style="width:100%" onclick="toast('Firebase Auth এখনো সংযুক্ত নয়')">লগইন / সাইন আপ</button>
-    <hr>
-    <button class="add" onclick="showWishlist()">🤍 আমার উইশলিস্ট (${wishlist.size})</button>`;
-  document.getElementById("modal").classList.add("show");
-}
-function showWishlist() {
-  document.getElementById("modalTitle").textContent = "🤍 আমার উইশলিস্ট";
-  const items = products.filter(p=>wishlist.has(p.id));
-  document.getElementById("modalContent").innerHTML = items.length
-    ? items.map(p=>`<p>${p.emoji} ${p.name} — ${money(p.price)}</p>`).join("")
-    : "<p>আপনার উইশলিস্ট এখন খালি।</p>";
-}
-function showOffers() {
-  activeCategory = "সব পণ্য";
-  offersOnly = true;
-  document.getElementById("sectionTitle").textContent = "🔥 বিশেষ অফার";
-  renderCategories(); renderProducts();
-  document.getElementById("productsSection").scrollIntoView({behavior:"smooth"});
-}
-function scrollProducts() {
-  document.getElementById("productsSection").scrollIntoView({behavior:"smooth"});
-}
-function focusSearch() {
-  document.getElementById("searchInput").focus();
-  window.scrollTo({top:0,behavior:"smooth"});
-}
-function closeModal() {
-  document.getElementById("modal").classList.remove("show");
-}
-let toastTimer;
-function toast(message) {
-  const el = document.getElementById("toast");
-  el.textContent = message;
-  el.style.display = "block";
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>el.style.display="none",2200);
-}
-document.getElementById("searchForm").addEventListener("submit",e=>{
-  e.preventDefault();
-  renderProducts();
-  document.getElementById("productsSection").scrollIntoView({behavior:"smooth"});
-});
-document.getElementById("searchInput").addEventListener("input",renderProducts);
-document.getElementById("year").textContent = new Date().getFullYear();
-renderCategories();
-renderProducts();
-updateCount();
-</script>
-</body>
-</html>
-  
+      <footer className="bg-gray-900 text-gray-300 p-4 mt-8 text-center text-xs">
+        <p>© {new Date().getFullYear()} {settings.storeName}. All rights reserved.</p>
+      </footer>
+    </div>
+  );
+                                                                                                                                                                                               }
