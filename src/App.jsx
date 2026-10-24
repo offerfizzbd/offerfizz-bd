@@ -54,27 +54,36 @@ const INITIAL_SETTINGS = {
   facebookUrl: "https://facebook.com",
   whatsappUrl: "https://wa.me/8801700000000",
   superAdminUser: "admin",
-  superAdminPass: "1234"
+  superAdminPass: "1234",
+  deliveryPolicyText: "ডেলিভারি সিস্টেম ও রিটার্ন পলিসির নিয়ম এখানে লিখুন..."
 };
 
-const INITIAL_CATEGORIES = ['All', 'Fashion', 'Gadgets', 'Electronics', 'Beauty'];
+const INITIAL_CATEGORIES = [
+  { name: 'All', subcategories: [] },
+  { name: 'Fashion', subcategories: ['Men', 'Women', 'Kids'] },
+  { name: 'Gadgets', subcategories: ['Mobile Accessories', 'Smartwatch'] },
+  { name: 'Electronics', subcategories: ['Home Appliance'] },
+  { name: 'Beauty', subcategories: ['Skincare'] }
+];
 
 export default function App() {
   const [products, setProducts] = useState(() => JSON.parse(localStorage.getItem('offerfizz_products')) || INITIAL_PRODUCTS);
   const [orders, setOrders] = useState(() => JSON.parse(localStorage.getItem('offerfizz_orders')) || []);
   const [settings, setSettings] = useState(() => JSON.parse(localStorage.getItem('offerfizz_settings')) || INITIAL_SETTINGS);
   const [categories, setCategories] = useState(() => JSON.parse(localStorage.getItem('offerfizz_categories')) || INITIAL_CATEGORIES);
+  const [customers, setCustomers] = useState(() => JSON.parse(localStorage.getItem('offerfizz_customers')) || []);
 
   const [activeTab, setActiveTab] = useState('home'); 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedSubCategory, setSelectedSubCategory] = useState('All');
   
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [viewProductDetails, setViewProductDetails] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  const [customerUser, setCustomerUser] = useState(() => JSON.parse(localStorage.getItem('offerfizz_customer')) || null);
-  const [customerForm, setCustomerForm] = useState({ name: '', mobile: '', address: '', password: '' });
+  const [customerUser, setCustomerUser] = useState(() => JSON.parse(localStorage.getItem('offerfizz_customer_logged')) || null);
+  const [customerAuthForm, setCustomerAuthForm] = useState({ name: '', mobile: '', address: '', password: '' });
   const [isCustomerAuthMode, setIsCustomerAuthMode] = useState('login');
 
   const [orderForm, setOrderForm] = useState({
@@ -86,21 +95,25 @@ export default function App() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [adminUsernameInput, setAdminUsernameInput] = useState('');
   const [adminPasswordInput, setAdminPasswordInput] = useState('');
-  const [adminSection, setAdminSection] = useState('products');
+  const [adminSection, setAdminSection] = useState('dashboard');
 
   const [editingProductId, setEditingProductId] = useState(null);
   const [productForm, setProductForm] = useState({
-    name: '', regularPrice: '', price: '', category: 'Fashion',
+    name: '', regularPrice: '', price: '', category: 'Fashion', subcategory: '',
     images: [], description: '', sizes: 'M, L, XL', stock: 10
   });
 
   const [newCatName, setNewCatName] = useState('');
+  const [newSubCatName, setNewSubCatName] = useState('');
+  const [selectedCatForSub, setSelectedCatForSub] = useState('Fashion');
   const [passForm, setPassForm] = useState({ oldPass: '', newPass: '', confirmPass: '' });
 
   useEffect(() => { localStorage.setItem('offerfizz_products', JSON.stringify(products)); }, [products]);
   useEffect(() => { localStorage.setItem('offerfizz_orders', JSON.stringify(orders)); }, [orders]);
   useEffect(() => { localStorage.setItem('offerfizz_settings', JSON.stringify(settings)); }, [settings]);
   useEffect(() => { localStorage.setItem('offerfizz_categories', JSON.stringify(categories)); }, [categories]);
+  useEffect(() => { localStorage.setItem('offerfizz_customers', JSON.stringify(customers)); }, [customers]);
+  useEffect(() => { localStorage.setItem('offerfizz_customer_logged', JSON.stringify(customerUser)); }, [customerUser]);
 
   const handleMultipleImagesUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -167,11 +180,21 @@ export default function App() {
     alert("আপনার অর্ডারটি সফলভাবে গৃহীত হয়েছে! অর্ডার আইডি: " + newOrder.id);
   };
 
-  const filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) && (selectedCategory === 'All' || p.category === selectedCategory));
+  // Order Status Update
+  const updateOrderStatus = (orderId, newStatus) => {
+    setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+  };
+
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCat = selectedCategory === 'All' || p.category === selectedCategory;
+    const matchesSub = selectedSubCategory === 'All' || p.subcategory === selectedSubCategory;
+    return matchesSearch && matchesCat && matchesSub;
+  });
 
   const handleAdminLogin = (e) => {
     e.preventDefault();
-    if (adminUsernameInput.trim() === 'admin' && adminPasswordInput.trim() === '1234') {
+    if (adminUsernameInput.trim() === settings.superAdminUser && adminPasswordInput.trim() === settings.superAdminPass) {
       setIsAdminLoggedIn(true);
     } else {
       alert("ভুল ইউজারনেম বা পাসওয়ার্ড!");
@@ -185,7 +208,8 @@ export default function App() {
     if (editingProductId) {
       setProducts(products.map(p => p.id === editingProductId ? {
         ...p, name: productForm.name, regularPrice: Number(productForm.regularPrice) || Number(productForm.price),
-        price: Number(productForm.price), category: productForm.category, images: productForm.images.length > 0 ? productForm.images : p.images,
+        price: Number(productForm.price), category: productForm.category, subcategory: productForm.subcategory || '', 
+        images: productForm.images.length > 0 ? productForm.images : p.images,
         description: productForm.description, sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['Standard'], stock: Number(productForm.stock)
       } : p));
       setEditingProductId(null);
@@ -193,19 +217,20 @@ export default function App() {
     } else {
       setProducts([{
         id: Date.now(), name: productForm.name, regularPrice: Number(productForm.regularPrice) || Number(productForm.price),
-        price: Number(productForm.price), category: productForm.category, images: productForm.images.length > 0 ? productForm.images : ["https://via.placeholder.com/150"],
+        price: Number(productForm.price), category: productForm.category, subcategory: productForm.subcategory || '',
+        images: productForm.images.length > 0 ? productForm.images : ["https://via.placeholder.com/150"],
         description: productForm.description || "প্রিমিয়াম প্রোডাক্ট।", sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['Standard'], stock: Number(productForm.stock)
       }, ...products]);
       alert("নতুন প্রোডাক্ট যুক্ত হয়েছে!");
     }
-    setProductForm({ name: '', regularPrice: '', price: '', category: 'Fashion', images: [], description: '', sizes: 'M, L, XL', stock: 10 });
+    setProductForm({ name: '', regularPrice: '', price: '', category: 'Fashion', subcategory: '', images: [], description: '', sizes: 'M, L, XL', stock: 10 });
   };
 
   const handleEditProductClick = (product) => {
     setEditingProductId(product.id);
     setProductForm({
       name: product.name, regularPrice: product.regularPrice || product.price, price: product.price,
-      category: product.category, images: product.images || [], description: product.description,
+      category: product.category, subcategory: product.subcategory || '', images: product.images || [], description: product.description,
       sizes: product.sizes ? product.sizes.join(', ') : 'Standard', stock: product.stock
     });
   };
@@ -213,6 +238,93 @@ export default function App() {
   const deleteProduct = (id) => {
     if (window.confirm("প্রোডাক্টটি মুছে ফেলতে চান?")) {
       setProducts(products.filter(p => p.id !== id));
+    }
+  };
+
+  // Category & Subcategory handlers
+  const handleAddCategory = (e) => {
+    e.preventDefault();
+    if (!newCatName.trim()) return;
+    if (categories.some(c => c.name.toLowerCase() === newCatName.trim().toLowerCase())) return alert("ক্যাটাগরি ইতিমধ্যে আছে!");
+    setCategories([...categories, { name: newCatName.trim(), subcategories: [] }]);
+    setNewCatName('');
+  };
+
+  const handleAddSubcategory = (e) => {
+    e.preventDefault();
+    if (!newSubCatName.trim()) return;
+    setCategories(categories.map(cat => {
+      if (cat.name === selectedCatForSub) {
+        if (cat.subcategories.includes(newSubCatName.trim())) return cat;
+        return { ...cat, subcategories: [...cat.subcategories, newSubCatName.trim()] };
+      }
+      return cat;
+    }));
+    setNewSubCatName('');
+  };
+
+  const deleteCategory = (catName) => {
+    if (catName === 'All') return alert("ডিফল্ট ক্যাটাগরি মোছা যাবে না।");
+    if (window.confirm(`"${catName}" ক্যাটাগরি মুছতে চান?`)) {
+      setCategories(categories.filter(c => c.name !== catName));
+      if (selectedCategory === catName) setSelectedCategory('All');
+    }
+  };
+
+  const deleteSubcategory = (catName, subName) => {
+    setCategories(categories.map(cat => {
+      if (cat.name === catName) {
+        return { ...cat, subcategories: cat.subcategories.filter(s => s !== subName) };
+      }
+      return cat;
+    }));
+  };
+
+  // Admin Password Change
+  const handlePasswordChange = (e) => {
+    e.preventDefault();
+    if (passForm.oldPass !== settings.superAdminPass) return alert("পুরানো পাসওয়ার্ড ভুল!");
+    if (passForm.newPass !== passForm.confirmPass) return alert("নতুন পাসওয়ার্ড মিলছে না!");
+    if (!passForm.newPass) return alert("নতুন পাসওয়ার্ড দিন!");
+
+    setSettings({ ...settings, superAdminPass: passForm.newPass });
+    setPassForm({ oldPass: '', newPass: '', confirmPass: '' });
+    alert("অ্যাডমিন পাসওয়ার্ড সফলভাবে পরিবর্তিত হয়েছে!");
+  };
+
+  // Customer Auth & Freeze Management
+  const handleCustomerAuth = (e) => {
+    e.preventDefault();
+    if (isCustomerAuthMode === 'register') {
+      if (!customerAuthForm.name || !customerAuthForm.mobile || !customerAuthForm.password) return alert("সব ফিল্ড পূরণ করুন!");
+      const existing = customers.find(c => c.mobile === customerAuthForm.mobile);
+      if (existing) return alert("এই নম্বরে ইতিমধ্যে অ্যাকাউন্ট আছে!");
+
+      const newCust = { ...customerAuthForm, isFrozen: false, id: Date.now() };
+      setCustomers([...customers, newCust]);
+      setCustomerUser(newCust);
+      alert("সফলভাবে রেজিস্টার্ড হয়েছে!");
+    } else {
+      const found = customers.find(c => c.mobile === customerAuthForm.mobile && c.password === customerAuthForm.password);
+      if (!found) return alert("নম্বর বা পাসওয়ার্ড ভুল!");
+      if (found.isFrozen) return alert("আপনার অ্যাকাউন্টটি অ্যাডমিন কর্তৃক ফ্রিজ (স্থগিত) করা হয়েছে!");
+      setCustomerUser(found);
+      alert("লগইন সফল হয়েছে!");
+    }
+  };
+
+  const handleCustomerProfileUpdate = (e) => {
+    e.preventDefault();
+    const updated = { ...customerUser, name: customerAuthForm.name || customerUser.name, address: customerAuthForm.address || customerUser.address };
+    setCustomerUser(updated);
+    setCustomers(customers.map(c => c.mobile === updated.mobile ? updated : c));
+    alert("প্রোফাইল আপডেট হয়েছে!");
+  };
+
+  const toggleCustomerFreeze = (mobile) => {
+    setCustomers(customers.map(c => c.mobile === mobile ? { ...c, isFrozen: !c.isFrozen } : c));
+    if (customerUser && customerUser.mobile === mobile) {
+      setCustomerUser(prev => ({ ...prev, isFrozen: !prev.isFrozen }));
     }
   };
 
@@ -247,11 +359,28 @@ export default function App() {
               )}
             </div>
 
-            <div className="px-3 mb-3 flex gap-2 overflow-x-auto pb-1">
+            {/* Category Tabs */}
+            <div className="px-3 mb-2 flex gap-2 overflow-x-auto pb-1">
               {categories.map((cat) => (
-                <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-3 py-1 rounded-full text-xs font-semibold ${selectedCategory === cat ? 'bg-purple-700 text-white' : 'bg-white text-gray-600 border'}`}>{cat}</button>
+                <button key={cat.name} onClick={() => { setSelectedCategory(cat.name); setSelectedSubCategory('All'); }} className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${selectedCategory === cat.name ? 'bg-purple-700 text-white' : 'bg-white text-gray-600 border'}`}>{cat.name}</button>
               ))}
             </div>
+
+            {/* SubCategory Tabs */}
+            {selectedCategory !== 'All' && (() => {
+              const currentCatObj = categories.find(c => c.name === selectedCategory);
+              if (currentCatObj && currentCatObj.subcategories.length > 0) {
+                return (
+                  <div className="px-3 mb-3 flex gap-1.5 overflow-x-auto pb-1">
+                    <button onClick={() => setSelectedSubCategory('All')} className={`px-2.5 py-0.5 rounded-md text-[11px] ${selectedSubCategory === 'All' ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'}`}>All {selectedCategory}</button>
+                    {currentCatObj.subcategories.map(sub => (
+                      <button key={sub} onClick={() => setSelectedSubCategory(sub)} className={`px-2.5 py-0.5 rounded-md text-[11px] whitespace-nowrap ${selectedSubCategory === sub ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'}`}>{sub}</button>
+                    ))}
+                  </div>
+                );
+              }
+              return null;
+            })()}
 
             <div className="px-3">
               <h3 className="text-xs font-bold text-gray-700 mb-2">সকল প্রোডাক্ট ({filteredProducts.length})</h3>
@@ -280,6 +409,69 @@ export default function App() {
           </main>
         )}
 
+         {/* Product Details Modal */}
+        {viewProductDetails && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 text-xs">
+            <div className="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center border-b pb-2"><h3 className="font-bold text-sm text-purple-700">{viewProductDetails.name}</h3><button onClick={() => setViewProductDetails(null)} className="text-gray-500 font-bold text-base">✕</button></div>
+              <div className="space-y-2">
+                <div className="w-full h-56 rounded-xl overflow-hidden border bg-gray-100">
+                  <img src={viewProductDetails.images?.[activeImageIndex] || viewProductDetails.images?.[0] || "https://via.placeholder.com/150"} alt="" className="w-full h-full object-cover" />
+                </div>
+                {viewProductDetails.images && viewProductDetails.images.length > 1 && (
+                  <div className="flex gap-2 overflow-x-auto">
+                    {viewProductDetails.images.map((img, idx) => (
+                      <img key={idx} src={img} alt="" onClick={() => setActiveImageIndex(idx)} className={`w-12 h-12 object-cover rounded cursor-pointer border-2 ${activeImageIndex === idx ? 'border-purple-600' : 'border-transparent'}`} />
+                    ))}
+                  </div>
+                )}
+                <div><span className="text-lg font-bold text-purple-700">৳ {viewProductDetails.price}</span></div>
+                <p className="whitespace-pre-line text-gray-600 leading-relaxed bg-gray-50 p-2.5 rounded-xl border">{viewProductDetails.description}</p>
+                <button onClick={() => openOrderModal(viewProductDetails)} className="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-xl">Order Now</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Customer Profile Tab */}
+        {activeTab === 'profile' && (
+          <main className="p-4 max-w-md mx-auto text-xs">
+            {customerUser && !customerUser.isFrozen ? (
+              <div className="bg-white p-4 rounded-2xl border space-y-3">
+                <div className="flex justify-between items-center border-b pb-2">
+                  <h3 className="font-bold text-sm text-purple-700">👤 আমার প্রোফাইল</h3>
+                  <button onClick={() => setCustomerUser(null)} className="bg-red-50 text-red-600 px-2 py-1 rounded">লগআউট</button>
+                </div>
+                <form onSubmit={handleCustomerProfileUpdate} className="space-y-2">
+                  <div><label className="font-bold block mb-1">নাম:</label><input type="text" defaultValue={customerUser.name} onChange={(e) => setCustomerAuthForm({ ...customerAuthForm, name: e.target.value })} className="border p-2 rounded w-full" /></div>
+                  <div><label className="font-bold block mb-1">মোবাইল নম্বর:</label><input type="text" disabled value={customerUser.mobile} className="border p-2 rounded w-full bg-gray-100 text-gray-500" /></div>
+                  <div><label className="font-bold block mb-1">ঠিকানা:</label><textarea defaultValue={customerUser.address} onChange={(e) => setCustomerAuthForm({ ...customerAuthForm, address: e.target.value })} className="border p-2 rounded w-full" rows="2"></textarea></div>
+                  <button type="submit" className="w-full bg-purple-700 text-white font-bold py-2 rounded">প্রোফাইল আপডেট করুন</button>
+                </form>
+              </div>
+            ) : (
+              <div className="bg-white p-4 rounded-2xl border space-y-3">
+                <div className="flex justify-center gap-4 border-b pb-2 font-bold">
+                  <button onClick={() => setIsCustomerAuthMode('login')} className={isCustomerAuthMode === 'login' ? 'text-purple-700 border-b-2 border-purple-700 pb-1' : 'text-gray-400'}>লগইন</button>
+                  <button onClick={() => setIsCustomerAuthMode('register')} className={isCustomerAuthMode === 'register' ? 'text-purple-700 border-b-2 border-purple-700 pb-1' : 'text-gray-400'}>রেজিস্ট্রেশন</button>
+                </div>
+                <form onSubmit={handleCustomerAuth} className="space-y-2">
+                  {isCustomerAuthMode === 'register' && (
+                    <div><label className="font-bold block mb-1">নাম:</label><input type="text" required placeholder="আপনার নাম" value={customerAuthForm.name} onChange={(e) => setCustomerAuthForm({ ...customerAuthForm, name: e.target.value })} className="border p-2 rounded w-full" /></div>
+                  )}
+                  <div><label className="font-bold block mb-1">মোবাইল নম্বর:</label><input type="tel" required placeholder="01XXXXXXXXX" value={customerAuthForm.mobile} onChange={(e) => setCustomerAuthForm({ ...customerAuthForm, mobile: e.target.value })} className="border p-2 rounded w-full" /></div>
+                  <div><label className="font-bold block mb-1">পাসওয়ার্ড:</label><input type="password" required placeholder="পাসওয়ার্ড" value={customerAuthForm.password} onChange={(e) => setCustomerAuthForm({ ...customerAuthForm, password: e.target.value })} className="border p-2 rounded w-full" /></div>
+                  {isCustomerAuthMode === 'register' && (
+                    <div><label className="font-bold block mb-1">ঠিকানা:</label><textarea placeholder="আপনার ঠিকানা" value={customerAuthForm.address} onChange={(e) => setCustomerAuthForm({ ...customerAuthForm, address: e.target.value })} className="border p-2 rounded w-full" rows="2"></textarea></div>
+                  )}
+                  <button type="submit" className="w-full bg-purple-700 text-white font-bold py-2.5 rounded">{isCustomerAuthMode === 'login' ? 'লগইন করুন' : 'রেজিস্ট্রেশন করুন'}</button>
+                </form>
+              </div>
+            )}
+          </main>
+        )}
+
+        {/* Admin Tab */}
         {activeTab === 'admin' && (
           <main className="p-4 max-w-2xl mx-auto text-xs">
             {!isAdminLoggedIn ? (
@@ -296,8 +488,8 @@ export default function App() {
                   <button onClick={() => setIsAdminLoggedIn(false)} className="bg-purple-800 px-2.5 py-1 rounded">Logout</button>
                 </div>
                 <div className="flex gap-2 mb-4 border-b pb-2 overflow-x-auto">
-                  {['dashboard', 'orders', 'products', 'settings'].map(tab => (
-                    <button key={tab} onClick={() => setAdminSection(tab)} className={`px-3 py-1 rounded-lg capitalize font-bold ${adminSection === tab ? 'bg-purple-700 text-white' : 'bg-white border'}`}>{tab}</button>
+                  {['dashboard', 'orders', 'products', 'categories', 'customers', 'settings'].map(tab => (
+                    <button key={tab} onClick={() => setAdminSection(tab)} className={`px-3 py-1 rounded-lg capitalize font-bold whitespace-nowrap ${adminSection === tab ? 'bg-purple-700 text-white' : 'bg-white border'}`}>{tab}</button>
                   ))}
                 </div>
 
@@ -308,14 +500,28 @@ export default function App() {
                   </div>
                 )}
 
+                {/* Orders Management */}
                 {adminSection === 'orders' && (
                   <div className="space-y-3">
                     {orders.length === 0 ? <p className="text-center bg-white p-4 rounded-xl border text-gray-500">কোনো অর্ডার নেই</p> : (
                       orders.map(ord => (
-                        <div key={ord.id} className="bg-white p-3 rounded-xl border space-y-1">
-                          <div className="flex justify-between font-bold text-purple-700"><span>{ord.id}</span><span>{ord.status}</span></div>
-                          <p><strong>প্রোডাক্ট:</strong> {ord.productName} ({ord.size})</p>
-                          <p><strong>কাস্টমার:</strong> {ord.customerName} ({ord.mobile})</p>
+                        <div key={ord.id} className="bg-white p-3 rounded-xl border space-y-2">
+                          <div className="flex justify-between items-center font-bold">
+                            <span className="text-purple-700">{ord.id}</span>
+                            <div className="flex items-center gap-2">
+                              <span className={`px-2 py-0.5 rounded text-[10px] ${ord.status === 'Confirmed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{ord.status}</span>
+                              {ord.status === 'Pending' && (
+                                <button onClick={() => updateOrderStatus(ord.id, 'Confirmed')} className="bg-emerald-600 text-white px-2.5 py-1 rounded font-bold shadow-sm">Confirm (গ্রিন)</button>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-2 items-center">
+                            {ord.productImage && <img src={ord.productImage} alt="" className="w-12 h-12 object-cover rounded border" />}
+                            <div>
+                              <p><strong>প্রোডাক্ট:</strong> {ord.productName} ({ord.size})</p>
+                              <p><strong>কাস্টমার:</strong> {ord.customerName} ({ord.mobile})</p>
+                            </div>
+                          </div>
                           <p><strong>ঠিকানা:</strong> {ord.address}</p>
                           <p><strong>পেমেন্ট:</strong> {ord.paymentMethod} | TrxID: {ord.trxId}</p>
                           <p className="font-bold text-emerald-700">মোট: ৳{ord.totalAmount}</p>
@@ -325,6 +531,7 @@ export default function App() {
                   </div>
                 )}
 
+                {/* Products & Editing with Image Support */}
                 {adminSection === 'products' && (
                   <div className="space-y-4">
                     <form onSubmit={handleSaveProduct} className="bg-white p-3.5 rounded-xl border space-y-2">
@@ -334,8 +541,32 @@ export default function App() {
                         <input type="number" placeholder="আগের দাম (৳)" value={productForm.regularPrice} onChange={(e) => setProductForm({ ...productForm, regularPrice: e.target.value })} className="border p-2 rounded" />
                         <input type="number" placeholder="অফার দাম (৳)" value={productForm.price} onChange={(e) => setProductForm({ ...productForm, price: e.target.value })} className="border p-2 rounded" required />
                       </div>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block font-semibold mb-1">ক্যাটাগরি:</label>
+                          <select value={productForm.category} onChange={(e) => setProductForm({ ...productForm, category: e.target.value, subcategory: '' })} className="w-full border p-2 rounded bg-white">
+                            {categories.filter(c => c.name !== 'All').map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block font-semibold mb-1">সাব-ক্যাটাগরি:</label>
+                          <select value={productForm.subcategory} onChange={(e) => setProductForm({ ...productForm, subcategory: e.target.value })} className="w-full border p-2 rounded bg-white">
+                            <option value="">-- সিলেক্ট করুন --</option>
+                            {categories.find(c => c.name === productForm.category)?.subcategories?.map(sub => <option key={sub} value={sub}>{sub}</option>)}
+                          </select>
+                        </div>
+                      </div>
+
                       <div>
-                        <label className="block font-bold text-gray-600 mb-1">প্রোডাক্ট ছবি নির্বাচন করুন:</label>
+                        <label className="block font-bold text-gray-600 mb-1">প্রোডাক্ট ছবি নির্বাচন করুন (পরিবর্তন বা নতুন):</label>
+                        {editingProductId && productForm.images.length > 0 && (
+                          <div className="flex gap-2 mb-2">
+                            {productForm.images.map((img, idx) => (
+                              <img key={idx} src={img} alt="" className="w-12 h-12 object-cover rounded border" />
+                            ))}
+                          </div>
+                        )}
                         <input type="file" accept="image/*" multiple onChange={handleMultipleImagesUpload} className="border p-1.5 rounded w-full bg-gray-50" />
                       </div>
                       <textarea placeholder="প্রোডাক্ট বিবরণ..." value={productForm.description} onChange={(e) => setProductForm({ ...productForm, description: e.target.value })} className="border p-2 rounded w-full" rows="3"></textarea>
@@ -361,7 +592,76 @@ export default function App() {
                   </div>
                 )}
 
-                 {adminSection === 'settings' && (
+                {/* Categories & Subcategories Management */}
+                {adminSection === 'categories' && (
+                  <div className="space-y-4">
+                    <div className="bg-white p-3 rounded-xl border space-y-3">
+                      <h3 className="font-bold border-b pb-1">নতুন ক্যাটাগরি যোগ করুন</h3>
+                      <form onSubmit={handleAddCategory} className="flex gap-2">
+                        <input type="text" placeholder="ক্যাটাগরি নাম" value={newCatName} onChange={(e) => setNewCatName(e.target.value)} className="border p-2 rounded flex-1" />
+                        <button type="submit" className="bg-purple-700 text-white px-4 py-2 rounded font-bold">Add Category</button>
+                      </form>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-xl border space-y-3">
+                      <h3 className="font-bold border-b pb-1">নতুন সাব-ক্যাটাগরি যোগ করুন</h3>
+                      <form onSubmit={handleAddSubcategory} className="space-y-2">
+                        <select value={selectedCatForSub} onChange={(e) => setSelectedCatForSub(e.target.value)} className="w-full border p-2 rounded bg-white">
+                          {categories.filter(c => c.name !== 'All').map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                        </select>
+                        <div className="flex gap-2">
+                          <input type="text" placeholder="সাব-ক্যাটাগরি নাম" value={newSubCatName} onChange={(e) => setNewSubCatName(e.target.value)} className="border p-2 rounded flex-1" />
+                          <button type="submit" className="bg-emerald-600 text-white px-4 py-2 rounded font-bold">Add Subcategory</button>
+                        </div>
+                      </form>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-xl border space-y-2">
+                      <h3 className="font-bold border-b pb-1">ক্যাটাগরি তালিকা</h3>
+                      {categories.map(cat => (
+                        <div key={cat.name} className="border-b pb-2 mb-2">
+                          <div className="flex justify-between items-center font-bold text-purple-700">
+                            <span>📂 {cat.name}</span>
+                            {cat.name !== 'All' && <button onClick={() => deleteCategory(cat.name)} className="text-red-500 text-[10px]">Delete</button>}
+                          </div>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {cat.subcategories.map(sub => (
+                              <span key={sub} className="bg-gray-100 px-2 py-0.5 rounded text-[11px] flex items-center gap-1">
+                                {sub} <button onClick={() => deleteSubcategory(cat.name, sub)} className="text-red-500 font-bold">×</button>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Customers Freeze / Unfreeze Management */}
+                {adminSection === 'customers' && (
+                  <div className="space-y-3">
+                    <h3 className="font-bold">কাস্টমার অ্যাকাউন্ট ম্যানেজমেন্ট (ফ্রিজ/আনফ্রিজ)</h3>
+                    {customers.length === 0 ? <p className="bg-white p-4 rounded border text-center text-gray-500">কোনো রেজিস্টার্ড কাস্টমার নেই</p> : (
+                      customers.map(cust => (
+                        <div key={cust.mobile} className="bg-white p-3 rounded-xl border flex justify-between items-center">
+                          <div>
+                            <p className="font-bold">{cust.name} ({cust.mobile})</p>
+                            <p className="text-gray-500 text-[11px]">{cust.address || 'ঠিকানা দেওয়া হয়নি'}</p>
+                            <span className={`px-2 py-0.5 rounded text-[10px] ${cust.isFrozen ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                              {cust.isFrozen ? 'Frozen (স্থগিত)' : 'Active (সক্রিয়)'}
+                            </span>
+                          </div>
+                          <button onClick={() => toggleCustomerFreeze(cust.mobile)} className={`px-3 py-1.5 rounded font-bold text-white ${cust.isFrozen ? 'bg-emerald-600' : 'bg-red-600'}`}>
+                            {cust.isFrozen ? 'Unfreeze' : 'Freeze'}
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {/* Settings, Password Change & Footer Content Placeholders */}
+                {adminSection === 'settings' && (
                   <div className="space-y-4">
                     <div className="bg-white p-3 rounded-xl border space-y-2">
                       <h3 className="font-bold border-b pb-1">ওয়েবসাইট সেটিংস</h3>
@@ -369,6 +669,16 @@ export default function App() {
                       <input type="text" value={settings.storeName} onChange={(e) => setSettings({ ...settings, storeName: e.target.value })} className="w-full border rounded p-2" />
                       <label className="block font-semibold mt-2">হোমপেজ ব্যানার আপলোড:</label>
                       <input type="file" accept="image/*" onChange={handleBannerUpload} className="w-full border p-1 rounded bg-gray-50" />
+                    </div>
+
+                    <div className="bg-white p-3 rounded-xl border space-y-2">
+                      <h3 className="font-bold border-b pb-1">অ্যাডমিন পাসওয়ার্ড পরিবর্তন</h3>
+                      <form onSubmit={handlePasswordChange} className="space-y-2">
+                        <input type="password" placeholder="পুরানো পাসওয়ার্ড" value={passForm.oldPass} onChange={(e) => setPassForm({ ...passForm, oldPass: e.target.value })} className="w-full border p-2 rounded" />
+                        <input type="password" placeholder="নতুন পাসওয়ার্ড" value={passForm.newPass} onChange={(e) => setPassForm({ ...passForm, newPass: e.target.value })} className="w-full border p-2 rounded" />
+                        <input type="password" placeholder="কনফার্ম নতুন পাসওয়ার্ড" value={passForm.confirmPass} onChange={(e) => setPassForm({ ...passForm, confirmPass: e.target.value })} className="w-full border p-2 rounded" />
+                        <button type="submit" className="w-full bg-purple-700 text-white font-bold py-2 rounded">পাসওয়ার্ড পরিবর্তন করুন</button>
+                      </form>
                     </div>
 
                     <div className="bg-white p-3 rounded-xl border space-y-2">
@@ -385,6 +695,7 @@ export default function App() {
           </main>
         )}
 
+        {/* Order Modal */}
         {selectedProduct && (
           <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 text-xs">
             <div className="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 max-h-[90vh] overflow-y-auto">
@@ -439,13 +750,34 @@ export default function App() {
 
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
           <button onClick={() => setActiveTab('home')} className={activeTab === 'home' ? 'text-purple-700 font-bold' : ''}>🛍️ Home</button>
+          <button onClick={() => setActiveTab('profile')} className={activeTab === 'profile' ? 'text-purple-700 font-bold' : ''}>👤 Profile</button>
           <button onClick={() => setActiveTab('admin')} className={activeTab === 'admin' ? 'text-purple-700 font-bold' : ''}>🔑 Admin</button>
         </div>
       </div>
 
-      <footer className="bg-gray-900 text-gray-300 p-4 mt-8 text-center text-xs">
-        <p>© {new Date().getFullYear()} {settings.storeName}. All rights reserved.</p>
+      {/* Footer with Social Icons, Contact Info, and Delivery/Return Policy placeholder */}
+      <footer className="bg-gray-900 text-gray-300 p-6 mt-8 text-xs space-y-4">
+        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-gray-800 pb-4">
+          <div>
+            <h4 className="font-bold text-white mb-2 text-sm">যোগাযোগ ও সোশ্যাল মিডিয়া</h4>
+            <p>📞 হটলাইন: {settings.contactPhone}</p>
+            <p>📧 ইমেইল: {settings.contactEmail}</p>
+            <div className="flex gap-3 mt-3 text-lg">
+              <a href={settings.facebookUrl} target="_blank" rel="noreferrer" title="Facebook">📘</a>
+              <a href={settings.whatsappUrl} target="_blank" rel="noreferrer" title="WhatsApp">💬</a>
+              <a href={`mailto:${settings.contactEmail}`} title="Gmail">✉️</a>
+              <a href="https://youtube.com" target="_blank" rel="noreferrer" title="YouTube">▶️</a>
+            </div>
+          </div>
+          <div>
+            <h4 className="font-bold text-white mb-2 text-sm">ডেলিভারি সিস্টেম ও রিটার্ন পলিসি</h4>
+            <p className="text-gray-400 leading-relaxed bg-gray-800 p-2.5 rounded-lg border border-gray-700">
+              {settings.deliveryPolicyText}
+            </p>
+          </div>
+        </div>
+        <p className="text-center text-gray-500">© {new Date().getFullYear()} {settings.storeName}. All rights reserved.</p>
       </footer>
     </div>
   );
-                                                                                                                                                                                               }
+                                                                                                                                                                          }
