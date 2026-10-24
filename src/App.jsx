@@ -7,38 +7,19 @@ const INITIAL_PRODUCTS = [
     regularPrice: 1800,
     price: 1300,
     category: "Fashion",
+    subcategory: "Men",
+    colors: ["Black", "Navy Blue", "Olive"],
+    colorImages: {
+      "Black": "https://images.unsplash.com/photo-1544441893-675973e31985?w=500&q=80",
+      "Navy Blue": "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&q=80",
+      "Olive": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80"
+    },
     images: [
       "https://images.unsplash.com/photo-1544441893-675973e31985?w=500&q=80"
     ],
     description: "🔥 Exclusive European Style Winter Jacket\n✨ Stylish and comfortable for winter\n📏 Size Chart: M, L, XL",
     sizes: ["M", "L", "XL"],
     stock: 15
-  },
-  {
-    id: 2,
-    name: "Stylish Denim Jacket for Winter",
-    regularPrice: 1500,
-    price: 1050,
-    category: "Fashion",
-    images: [
-      "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&q=80"
-    ],
-    description: "High quality premium denim jacket for men.",
-    sizes: ["M", "L", "XL"],
-    stock: 10
-  },
-  {
-    id: 3,
-    name: "Chinese Winter Shacket Jacket",
-    regularPrice: 1800,
-    price: 1400,
-    category: "Fashion",
-    images: [
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80"
-    ],
-    description: "Exclusive winter shacket jacket with soft lining.",
-    sizes: ["M", "L", "XL"],
-    stock: 8
   }
 ];
 
@@ -47,12 +28,12 @@ const INITIAL_SETTINGS = {
   bannerTitle: "Welcome to OfferFizz BD!",
   bannerSubtitle: "কম দামে সেরা অফারে প্রিমিয়াম প্রোডাক্ট কিনুন।",
   bannerImage: "",
-  bkashNumber: "01700000000",
-  nagadNumber: "01700000000",
-  contactPhone: "01700000000",
+  bkashNumber: "01963590338",
+  nagadNumber: "01963590338",
+  contactPhone: "01963590338",
   contactEmail: "support@offerfizzbd.com",
   facebookUrl: "https://facebook.com",
-  whatsappUrl: "https://wa.me/8801700000000",
+  whatsappUrl: "https://wa.me/8801963590338",
   superAdminUser: "admin",
   superAdminPass: "1234",
   deliveryPolicyText: "ডেলিভারি সিস্টেম ও রিটার্ন পলিসির নিয়ম এখানে লিখুন..."
@@ -87,7 +68,7 @@ export default function App() {
   const [isCustomerAuthMode, setIsCustomerAuthMode] = useState('login');
 
   const [orderForm, setOrderForm] = useState({
-    name: '', mobile: '', address: '', size: '',
+    name: '', mobile: '', address: '', size: '', color: '',
     deliveryArea: 'outside', paymentMethod: 'COD',
     trxId: '', paymentScreenshot: ''
   });
@@ -100,7 +81,7 @@ export default function App() {
   const [editingProductId, setEditingProductId] = useState(null);
   const [productForm, setProductForm] = useState({
     name: '', regularPrice: '', price: '', category: 'Fashion', subcategory: '',
-    images: [], description: '', sizes: 'M, L, XL', stock: 10
+    colorsStr: 'Black, Navy Blue', images: [], colorImages: {}, description: '', sizes: 'M, L, XL', stock: 10
   });
 
   const [newCatName, setNewCatName] = useState('');
@@ -147,11 +128,13 @@ export default function App() {
   const openOrderModal = (product) => {
     setSelectedProduct(product);
     setViewProductDetails(null);
+    const defaultColor = product.colors?.[0] || '';
     setOrderForm({
       name: customerUser ? customerUser.name : '',
       mobile: customerUser ? customerUser.mobile : '',
       address: customerUser ? customerUser.address : '',
       size: product.sizes?.[0] || 'Standard',
+      color: defaultColor,
       deliveryArea: 'outside', paymentMethod: 'COD', trxId: '', paymentScreenshot: ''
     });
   };
@@ -164,15 +147,31 @@ export default function App() {
     }
 
     const deliveryCharge = orderForm.deliveryArea === 'inside' ? 60 : 120;
+    const nowTime = new Date().toLocaleString('bn-BD', { hour12: true });
+    
+    const chosenColor = orderForm.color || '';
+    const finalImg = selectedProduct.colorImages?.[chosenColor] || selectedProduct.images?.[0] || '';
+
     const newOrder = {
       id: "ORD-" + Date.now().toString().slice(-6),
       productName: selectedProduct.name,
-      productImage: selectedProduct.images?.[0] || '',
+      productImage: finalImg,
       productPrice: selectedProduct.price,
-      size: orderForm.size, customerName: orderForm.name, mobile: orderForm.mobile, address: orderForm.address,
-      deliveryArea: orderForm.deliveryArea, deliveryCharge, totalAmount: selectedProduct.price + deliveryCharge,
-      paymentMethod: orderForm.paymentMethod, trxId: orderForm.trxId || 'N/A', paymentScreenshot: orderForm.paymentScreenshot || null,
-      status: 'Pending', date: new Date().toLocaleDateString('bn-BD')
+      size: orderForm.size,
+      color: chosenColor,
+      customerMobile: orderForm.mobile,
+      customerName: orderForm.name, 
+      mobile: orderForm.mobile, 
+      address: orderForm.address,
+      deliveryArea: orderForm.deliveryArea, 
+      deliveryCharge, 
+      totalAmount: selectedProduct.price + deliveryCharge,
+      paymentMethod: orderForm.paymentMethod, 
+      trxId: orderForm.trxId || 'N/A', 
+      paymentScreenshot: orderForm.paymentScreenshot || null,
+      status: 'Pending', 
+      orderTime: nowTime,
+      confirmedTime: null
     };
 
     setOrders([newOrder, ...orders]);
@@ -180,9 +179,10 @@ export default function App() {
     alert("আপনার অর্ডারটি সফলভাবে গৃহীত হয়েছে! অর্ডার আইডি: " + newOrder.id);
   };
 
-  // Order Status Update
+  // Order Status Update with Timestamp
   const updateOrderStatus = (orderId, newStatus) => {
-    setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+    const confirmTimeStr = new Date().toLocaleString('bn-BD', { hour12: true });
+    setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus, confirmedTime: confirmTimeStr } : o));
   };
 
   const filteredProducts = products.filter(p => {
@@ -205,33 +205,57 @@ export default function App() {
     e.preventDefault();
     if (!productForm.name || !productForm.price) return alert("নাম এবং দাম আবশ্যক!");
 
+    const colorsList = productForm.colorsStr ? productForm.colorsStr.split(',').map(c => c.trim()) : [];
+
     if (editingProductId) {
       setProducts(products.map(p => p.id === editingProductId ? {
-        ...p, name: productForm.name, regularPrice: Number(productForm.regularPrice) || Number(productForm.price),
-        price: Number(productForm.price), category: productForm.category, subcategory: productForm.subcategory || '', 
+        ...p, 
+        name: productForm.name, 
+        regularPrice: Number(productForm.regularPrice) || Number(productForm.price),
+        price: Number(productForm.price), 
+        category: productForm.category, 
+        subcategory: productForm.subcategory || '', 
+        colors: colorsList,
         images: productForm.images.length > 0 ? productForm.images : p.images,
-        description: productForm.description, sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['Standard'], stock: Number(productForm.stock)
+        description: productForm.description, 
+        sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['Standard'], 
+        stock: Number(productForm.stock)
       } : p));
       setEditingProductId(null);
       alert("প্রোডাক্ট আপডেট হয়েছে!");
     } else {
       setProducts([{
-        id: Date.now(), name: productForm.name, regularPrice: Number(productForm.regularPrice) || Number(productForm.price),
-        price: Number(productForm.price), category: productForm.category, subcategory: productForm.subcategory || '',
+        id: Date.now(), 
+        name: productForm.name, 
+        regularPrice: Number(productForm.regularPrice) || Number(productForm.price),
+        price: Number(productForm.price), 
+        category: productForm.category, 
+        subcategory: productForm.subcategory || '',
+        colors: colorsList,
         images: productForm.images.length > 0 ? productForm.images : ["https://via.placeholder.com/150"],
-        description: productForm.description || "প্রিমিয়াম প্রোডাক্ট।", sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['Standard'], stock: Number(productForm.stock)
+        description: productForm.description || "প্রিমিয়াম প্রোডাক্ট।", 
+        sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['Standard'], 
+        stock: Number(productForm.stock)
       }, ...products]);
       alert("নতুন প্রোডাক্ট যুক্ত হয়েছে!");
     }
-    setProductForm({ name: '', regularPrice: '', price: '', category: 'Fashion', subcategory: '', images: [], description: '', sizes: 'M, L, XL', stock: 10 });
+    setProductForm({ name: '', regularPrice: '', price: '', category: 'Fashion', subcategory: '', colorsStr: 'Black, Navy Blue', images: [], colorImages: {}, description: '', sizes: 'M, L, XL', stock: 10 });
   };
 
   const handleEditProductClick = (product) => {
     setEditingProductId(product.id);
     setProductForm({
-      name: product.name, regularPrice: product.regularPrice || product.price, price: product.price,
-      category: product.category, subcategory: product.subcategory || '', images: product.images || [], description: product.description,
-      sizes: product.sizes ? product.sizes.join(', ') : 'Standard', stock: product.stock
+      name: product.name, 
+      regularPrice: product.regularPrice || product.price, 
+      price: product.price,
+      category: product.category, 
+      subcategory: product.subcategory || '', 
+      colorsStr: product.colors ? product.colors.join(', ') : '',
+      images: product.images || [], 
+      colorImages: product.colorImages || {},
+      description: product.description,
+      sizes: product.sizes ? product.sizes.join(', ') : 'Standard', 
+      stock: product.stock
     });
   };
 
@@ -241,7 +265,7 @@ export default function App() {
     }
   };
 
-  // Category & Subcategory handlers
+  // Category & Subcategory handlers safely mapped
   const handleAddCategory = (e) => {
     e.preventDefault();
     if (!newCatName.trim()) return;
@@ -255,8 +279,9 @@ export default function App() {
     if (!newSubCatName.trim()) return;
     setCategories(categories.map(cat => {
       if (cat.name === selectedCatForSub) {
-        if (cat.subcategories.includes(newSubCatName.trim())) return cat;
-        return { ...cat, subcategories: [...cat.subcategories, newSubCatName.trim()] };
+        const subs = cat.subcategories || [];
+        if (subs.includes(newSubCatName.trim())) return cat;
+        return { ...cat, subcategories: [...subs, newSubCatName.trim()] };
       }
       return cat;
     }));
@@ -274,7 +299,7 @@ export default function App() {
   const deleteSubcategory = (catName, subName) => {
     setCategories(categories.map(cat => {
       if (cat.name === catName) {
-        return { ...cat, subcategories: cat.subcategories.filter(s => s !== subName) };
+        return { ...cat, subcategories: (cat.subcategories || []).filter(s => s !== subName) };
       }
       return cat;
     }));
@@ -369,7 +394,7 @@ export default function App() {
             {/* SubCategory Tabs */}
             {selectedCategory !== 'All' && (() => {
               const currentCatObj = categories.find(c => c.name === selectedCategory);
-              if (currentCatObj && currentCatObj.subcategories.length > 0) {
+              if (currentCatObj && currentCatObj.subcategories && currentCatObj.subcategories.length > 0) {
                 return (
                   <div className="px-3 mb-3 flex gap-1.5 overflow-x-auto pb-1">
                     <button onClick={() => setSelectedSubCategory('All')} className={`px-2.5 py-0.5 rounded-md text-[11px] ${selectedSubCategory === 'All' ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'}`}>All {selectedCategory}</button>
@@ -399,7 +424,7 @@ export default function App() {
                         </div>
                       </div>
                     </div>
-                    <div className="p-2 pt-0">
+                     <div className="p-2 pt-0">
                       <button onClick={() => openOrderModal(product)} className="w-full bg-emerald-600 text-white text-xs font-semibold py-2 rounded-lg">Order Now</button>
                     </div>
                   </div>
@@ -409,7 +434,7 @@ export default function App() {
           </main>
         )}
 
-         {/* Product Details Modal */}
+        {/* Product Details Modal */}
         {viewProductDetails && (
           <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 text-xs">
             <div className="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 max-h-[90vh] overflow-y-auto">
@@ -425,7 +450,12 @@ export default function App() {
                     ))}
                   </div>
                 )}
-                <div><span className="text-lg font-bold text-purple-700">৳ {viewProductDetails.price}</span></div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-lg font-bold text-purple-700">৳ {viewProductDetails.price}</span>
+                  {viewProductDetails.regularPrice > viewProductDetails.price && (
+                    <span className="text-xs text-gray-400 line-through">৳ {viewProductDetails.regularPrice}</span>
+                  )}
+                </div>
                 <p className="whitespace-pre-line text-gray-600 leading-relaxed bg-gray-50 p-2.5 rounded-xl border">{viewProductDetails.description}</p>
                 <button onClick={() => openOrderModal(viewProductDetails)} className="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-xl">Order Now</button>
               </div>
@@ -435,7 +465,7 @@ export default function App() {
 
         {/* Customer Profile Tab */}
         {activeTab === 'profile' && (
-          <main className="p-4 max-w-md mx-auto text-xs">
+          <main className="p-4 max-w-md mx-auto text-xs space-y-4">
             {customerUser && !customerUser.isFrozen ? (
               <div className="bg-white p-4 rounded-2xl border space-y-3">
                 <div className="flex justify-between items-center border-b pb-2">
@@ -448,6 +478,29 @@ export default function App() {
                   <div><label className="font-bold block mb-1">ঠিকানা:</label><textarea defaultValue={customerUser.address} onChange={(e) => setCustomerAuthForm({ ...customerAuthForm, address: e.target.value })} className="border p-2 rounded w-full" rows="2"></textarea></div>
                   <button type="submit" className="w-full bg-purple-700 text-white font-bold py-2 rounded">প্রোফাইল আপডেট করুন</button>
                 </form>
+
+                {/* Customer Orders & Notification History */}
+                <div className="mt-4 border-t pt-3 space-y-2">
+                  <h4 className="font-bold text-gray-700">আমার অর্ডার ও নোটিফিকেশন:</h4>
+                  {orders.filter(o => o.customerMobile === customerUser.mobile || o.mobile === customerUser.mobile).length === 0 ? (
+                    <p className="text-gray-400 bg-gray-50 p-3 rounded-lg text-center">আপনার কোনো অর্ডার নেই।</p>
+                  ) : (
+                    orders.filter(o => o.customerMobile === customerUser.mobile || o.mobile === customerUser.mobile).map(ord => (
+                      <div key={ord.id} className="bg-purple-50 p-2.5 rounded-xl border border-purple-200 space-y-1">
+                        <div className="flex justify-between font-bold">
+                          <span className="text-purple-800">{ord.id} ({ord.productName})</span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] ${ord.status === 'Confirmed' ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white'}`}>
+                            {ord.status}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-gray-600">অর্ডারের সময়: {ord.orderTime}</p>
+                        {ord.confirmedTime && (
+                          <p className="text-[11px] text-emerald-700 font-semibold">🔔 নোটিফিকেশন: আপনার অর্ডারটি {ord.confirmedTime} এ কনফার্ম করা হয়েছে!</p>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             ) : (
               <div className="bg-white p-4 rounded-2xl border space-y-3">
@@ -509,7 +562,7 @@ export default function App() {
                           <div className="flex justify-between items-center font-bold">
                             <span className="text-purple-700">{ord.id}</span>
                             <div className="flex items-center gap-2">
-                              <span className={`px-2 py-0.5 rounded text-[10px] ${ord.status === 'Confirmed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{ord.status}</span>
+                              <span className={`px-2 py-0.5 rounded text-[10px] ${ord.status === 'Confirmed' ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white'}`}>{ord.status}</span>
                               {ord.status === 'Pending' && (
                                 <button onClick={() => updateOrderStatus(ord.id, 'Confirmed')} className="bg-emerald-600 text-white px-2.5 py-1 rounded font-bold shadow-sm">Confirm (গ্রিন)</button>
                               )}
@@ -518,12 +571,14 @@ export default function App() {
                           <div className="flex gap-2 items-center">
                             {ord.productImage && <img src={ord.productImage} alt="" className="w-12 h-12 object-cover rounded border" />}
                             <div>
-                              <p><strong>প্রোডাক্ট:</strong> {ord.productName} ({ord.size})</p>
+                              <p><strong>প্রোডাক্ট:</strong> {ord.productName} {ord.color && `(${ord.color})`} ({ord.size})</p>
                               <p><strong>কাস্টমার:</strong> {ord.customerName} ({ord.mobile})</p>
                             </div>
                           </div>
                           <p><strong>ঠিকানা:</strong> {ord.address}</p>
                           <p><strong>পেমেন্ট:</strong> {ord.paymentMethod} | TrxID: {ord.trxId}</p>
+                          <p className="text-gray-500 text-[11px]">অর্ডারের সময়: {ord.orderTime}</p>
+                          {ord.confirmedTime && <p className="text-emerald-700 text-[11px]">কনফার্মেশনের সময়: {ord.confirmedTime}</p>}
                           <p className="font-bold text-emerald-700">মোট: ৳{ord.totalAmount}</p>
                         </div>
                       ))
@@ -531,15 +586,21 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Products & Editing with Image Support */}
+                {/* Products & Editing with Colors Support */}
                 {adminSection === 'products' && (
                   <div className="space-y-4">
                     <form onSubmit={handleSaveProduct} className="bg-white p-3.5 rounded-xl border space-y-2">
                       <h3 className="font-bold border-b pb-1 text-purple-800">{editingProductId ? "✏️ প্রোডাক্ট এডিট করুন" : "➕ নতুন প্রোডাক্ট যুক্ত করুন (পোস্ট করুন)"}</h3>
                       <input type="text" placeholder="প্রোডাক্ট নাম" value={productForm.name} onChange={(e) => setProductForm({ ...productForm, name: e.target.value })} className="border p-2 rounded w-full" required />
                       <div className="grid grid-cols-2 gap-2">
-                        <input type="number" placeholder="আগের দাম (৳)" value={productForm.regularPrice} onChange={(e) => setProductForm({ ...productForm, regularPrice: e.target.value })} className="border p-2 rounded" />
-                        <input type="number" placeholder="অফার দাম (৳)" value={productForm.price} onChange={(e) => setProductForm({ ...productForm, price: e.target.value })} className="border p-2 rounded" required />
+                        <div>
+                          <label className="block text-[11px] font-semibold text-gray-500 mb-1">আগের দাম (Regular Price):</label>
+                          <input type="number" placeholder="আগের দাম (৳)" value={productForm.regularPrice} onChange={(e) => setProductForm({ ...productForm, regularPrice: e.target.value })} className="border p-2 rounded w-full" />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-gray-500 mb-1">অফার দাম (Offer Price):</label>
+                          <input type="number" placeholder="অফার দাম (৳)" value={productForm.price} onChange={(e) => setProductForm({ ...productForm, price: e.target.value })} className="border p-2 rounded w-full" required />
+                        </div>
                       </div>
                       
                       <div className="grid grid-cols-2 gap-2">
@@ -556,6 +617,11 @@ export default function App() {
                             {categories.find(c => c.name === productForm.category)?.subcategories?.map(sub => <option key={sub} value={sub}>{sub}</option>)}
                           </select>
                         </div>
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-gray-600 mb-1">কালারসমূহ (কমা দিয়ে লিখুন, যেমন: Black, Blue, Red):</label>
+                        <input type="text" placeholder="Black, Navy Blue" value={productForm.colorsStr} onChange={(e) => setProductForm({ ...productForm, colorsStr: e.target.value })} className="border p-2 rounded w-full" />
                       </div>
 
                       <div>
@@ -580,7 +646,13 @@ export default function App() {
                         <div key={p.id} className="bg-white p-2 rounded-xl border flex justify-between items-center">
                           <div className="flex items-center gap-2">
                             <img src={p.images?.[0] || ''} alt={p.name} className="w-10 h-10 object-cover rounded" />
-                            <div><p className="font-bold line-clamp-1">{p.name}</p><span className="text-purple-700">৳{p.price}</span></div>
+                            <div>
+                              <p className="font-bold line-clamp-1">{p.name}</p>
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-purple-700 font-bold">৳{p.price}</span>
+                                {p.regularPrice > p.price && <span className="text-[10px] text-gray-400 line-through">৳{p.regularPrice}</span>}
+                              </div>
+                            </div>
                           </div>
                           <div className="flex gap-1">
                             <button onClick={() => handleEditProductClick(p)} className="bg-blue-50 text-blue-600 font-bold px-2 py-1 rounded">✏️ Edit</button>
@@ -625,7 +697,7 @@ export default function App() {
                             {cat.name !== 'All' && <button onClick={() => deleteCategory(cat.name)} className="text-red-500 text-[10px]">Delete</button>}
                           </div>
                           <div className="flex flex-wrap gap-1 mt-1">
-                            {cat.subcategories.map(sub => (
+                            {cat.subcategories && cat.subcategories.map(sub => (
                               <span key={sub} className="bg-gray-100 px-2 py-0.5 rounded text-[11px] flex items-center gap-1">
                                 {sub} <button onClick={() => deleteSubcategory(cat.name, sub)} className="text-red-500 font-bold">×</button>
                               </span>
@@ -660,7 +732,7 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Settings, Password Change & Footer Content Placeholders */}
+                {/* Settings, Footer Info & Password Change */}
                 {adminSection === 'settings' && (
                   <div className="space-y-4">
                     <div className="bg-white p-3 rounded-xl border space-y-2">
@@ -669,6 +741,15 @@ export default function App() {
                       <input type="text" value={settings.storeName} onChange={(e) => setSettings({ ...settings, storeName: e.target.value })} className="w-full border rounded p-2" />
                       <label className="block font-semibold mt-2">হোমপেজ ব্যানার আপলোড:</label>
                       <input type="file" accept="image/*" onChange={handleBannerUpload} className="w-full border p-1 rounded bg-gray-50" />
+                    </div>
+
+                    <div className="bg-white p-3 rounded-xl border space-y-2">
+                      <h3 className="font-bold border-b pb-1">ফুটার ও কন্টাক্ট ইনফরমেশন সেটিংস</h3>
+                      <div><label className="block font-semibold mb-1">হটলাইন নম্বর (Phone):</label><input type="text" value={settings.contactPhone} onChange={(e) => setSettings({ ...settings, contactPhone: e.target.value })} className="border rounded p-2 w-full" /></div>
+                      <div><label className="block font-semibold mb-1">সাপোর্ট ইমেইল (Email):</label><input type="text" value={settings.contactEmail} onChange={(e) => setSettings({ ...settings, contactEmail: e.target.value })} className="border rounded p-2 w-full" /></div>
+                      <div><label className="block font-semibold mb-1">ফেসবুক পেজ লিঙ্ক (Facebook URL):</label><input type="text" value={settings.facebookUrl} onChange={(e) => setSettings({ ...settings, facebookUrl: e.target.value })} className="border rounded p-2 w-full" /></div>
+                      <div><label className="block font-semibold mb-1">হোয়াটসঅ্যাপ লিঙ্ক (WhatsApp URL):</label><input type="text" value={settings.whatsappUrl} onChange={(e) => setSettings({ ...settings, whatsappUrl: e.target.value })} className="border rounded p-2 w-full" /></div>
+                      <div><label className="block font-semibold mb-1">ডেলিভারি সিস্টেম ও রিটার্ন পলিসি:</label><textarea value={settings.deliveryPolicyText} onChange={(e) => setSettings({ ...settings, deliveryPolicyText: e.target.value })} className="border rounded p-2 w-full" rows="3"></textarea></div>
                     </div>
 
                     <div className="bg-white p-3 rounded-xl border space-y-2">
@@ -695,7 +776,7 @@ export default function App() {
           </main>
         )}
 
-        {/* Order Modal */}
+        {/* Order Modal with Color Selection */}
         {selectedProduct && (
           <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 text-xs">
             <div className="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 max-h-[90vh] overflow-y-auto">
@@ -706,6 +787,15 @@ export default function App() {
                 <div><label className="block font-bold mb-1">Mobile Number:</label><input type="tel" placeholder="01XXXXXXXXX" required value={orderForm.mobile} onChange={(e) => setOrderForm({ ...orderForm, mobile: e.target.value })} className="w-full border rounded p-2" /></div>
                 <div><label className="block font-bold mb-1">Full Address:</label><textarea placeholder="Your address" required value={orderForm.address} onChange={(e) => setOrderForm({ ...orderForm, address: e.target.value })} className="w-full border rounded p-2" rows="2"></textarea></div>
                 
+                {selectedProduct.colors && selectedProduct.colors.length > 0 && (
+                  <div>
+                    <label className="block font-bold mb-1">Select Color:</label>
+                    <select value={orderForm.color} onChange={(e) => setOrderForm({ ...orderForm, color: e.target.value })} className="w-full border rounded p-2 bg-white">
+                      {selectedProduct.colors.map((clr, idx) => <option key={idx} value={clr}>{clr}</option>)}
+                    </select>
+                  </div>
+                )}
+
                 <div>
                   <label className="block font-bold mb-1">Select Size:</label>
                   <select value={orderForm.size} onChange={(e) => setOrderForm({ ...orderForm, size: e.target.value })} className="w-full border rounded p-2 bg-white">
@@ -755,7 +845,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Footer with Social Icons, Contact Info, and Delivery/Return Policy placeholder */}
+      {/* Dynamic Footer with editable settings info */}
       <footer className="bg-gray-900 text-gray-300 p-6 mt-8 text-xs space-y-4">
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-gray-800 pb-4">
           <div>
@@ -771,7 +861,7 @@ export default function App() {
           </div>
           <div>
             <h4 className="font-bold text-white mb-2 text-sm">ডেলিভারি সিস্টেম ও রিটার্ন পলিসি</h4>
-            <p className="text-gray-400 leading-relaxed bg-gray-800 p-2.5 rounded-lg border border-gray-700">
+            <p className="text-gray-400 leading-relaxed bg-gray-800 p-2.5 rounded-lg border border-gray-700 whitespace-pre-line">
               {settings.deliveryPolicyText}
             </p>
           </div>
@@ -780,4 +870,4 @@ export default function App() {
       </footer>
     </div>
   );
-                                                                                                                                                                          }
+}
