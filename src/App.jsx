@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc } from "firebase/firestore";
+import { getFirestore, collection, getDocs, addDoc } from "firebase/firestore";
 import { getAnalytics, logEvent } from "firebase/analytics";
 
 // ফায়ারবেস কনফিগারেশন
@@ -19,28 +19,27 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const analytics = getAnalytics(app);
 
-const INITIAL_PRODUCTS = [
-  {
-    id: 1,
-    name: "Exclusive Padding Jacket for Men 🧥",
-    regularPrice: 1800,
-    price: 1300,
-    category: "Fashion",
-    subcategory: "Men",
-    colors: ["Black", "Navy Blue", "Olive"],
-    colorImages: {
-      "Black": "https://images.unsplash.com/photo-1544441893-675973e31985?w=500&q=80",
-      "Navy Blue": "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&q=80",
-      "Olive": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80"
-    },
-    images: [
-      "https://images.unsplash.com/photo-1544441893-675973e31985?w=500&q=80"
-    ],
-    description: "🔥 Exclusive European Style Winter Jacket\n✨ Stylish and comfortable for winter\n📏 Size Chart: M, L, XL",
-    sizes: ["M", "L", "XL"],
-    stock: 15
-  }
-];
+const [products, setProducts] = useState([]);
+
+useEffect(() => {
+  const fetchProducts = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "products"));
+      const productList = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      if (productList.length > 0) {
+        setProducts(productList);
+      }
+    } catch (error) {
+      console.error("Error fetching products: ", error);
+    }
+  };
+
+  fetchProducts();
+}, []);
+
 
 const INITIAL_SETTINGS = {
   storeName: "OfferFizz BD",
