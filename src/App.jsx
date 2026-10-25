@@ -273,7 +273,7 @@ export default function App() {
       setEditingProductId(null);
       alert("প্রোডাক্ট আপডেট হয়েছে!");
     } else {
-      setProducts([{
+      const newProd = {
         id: Date.now(), 
         name: productForm.name, 
         regularPrice: Number(productForm.regularPrice) || Number(productForm.price),
@@ -286,8 +286,10 @@ export default function App() {
         description: productForm.description || "প্রিমিয়াম প্রোডাক্ট।", 
         sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['Standard'], 
         stock: Number(productForm.stock)
-      }, ...products]);
-      alert("নতুন প্রোডাক্ট যুক্ত হয়েছে!");
+      };
+      // পুরোনো পোস্ট যেন মুছে না যায়, সেজন্য প্রিভিয়াস প্রোডাক্ট লিস্টের সাথে নতুন প্রোডাক্ট যুক্ত করা হয়েছে
+      setProducts(prevProducts => [newProd, ...prevProducts]);
+      alert("নতুন প্রোডাক্ট সফলভাবে পোস্ট করা হয়েছে!");
     }
     setProductForm({ name: '', regularPrice: '', price: '', category: 'Fashion', subcategory: '', colorsStr: 'Black, Navy Blue', images: [], colorImages: {}, description: '', sizes: 'M, L, XL', stock: 10 });
   };
@@ -923,7 +925,17 @@ export default function App() {
                   </div>
                   <div>
                     <label className="block font-bold mb-1">পরিমাণ (পিস):</label>
-                    <input type="number" min="1" value={orderForm.quantity} onChange={(e) => setOrderForm({ ...orderForm, quantity: Math.max(1, Number(e.target.value)) })} className="w-full border rounded p-2 bg-white" />
+                    {/* পিস ইনপুট ফিক্স: ব্যাকস্পেস দিয়ে সংখ্যা মুছে নতুন সংখ্যা সহজে লেখার জন্য ব্ল্যাংক হ্যান্ডেল করা হয়েছে */}
+                    <input 
+                      type="number" 
+                      min="1" 
+                      value={orderForm.quantity} 
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setOrderForm({ ...orderForm, quantity: val === '' ? '' : Math.max(1, Number(val)) });
+                      }} 
+                      className="w-full border rounded p-2 bg-white" 
+                    />
                   </div>
                 </div>
 
@@ -958,7 +970,7 @@ export default function App() {
           </div>
         )}
 
-          <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
           <button onClick={() => { setActiveTab('home'); setActivePageContent(null); }} className={activeTab === 'home' && !activePageContent ? 'text-purple-700 font-bold' : ''}>🛍️ হোম</button>
           <button onClick={() => { setActiveTab('profile'); setActivePageContent(null); }} className={activeTab === 'profile' && !activePageContent ? 'text-purple-700 font-bold' : ''}>👤 প্রোফাইল</button>
         </div>
