@@ -1002,7 +1002,7 @@ export default function App() {
         </div>
       </div>
 
-      <footer className="bg-gray-900 text-gray-300 p-6 mt-8 text-xs space-y-4">
+            <footer className="bg-gray-900 text-gray-300 p-6 mt-8 text-xs space-y-4">
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-gray-800 pb-4">
           <div>
             <h4 className="font-bold text-white mb-2 text-sm">যোগাযোগ ও সোশ্যাল মিডিয়া</h4>
@@ -1018,18 +1018,20 @@ export default function App() {
             <div className="space-y-1.5 flex flex-col items-start">
               <button 
                 onClick={() => {
-                  const found = customPages.find(p => p.id.toString() === settings.deliveryPolicyUrl);
-                  if (found) setActivePageContent(found);
-                  else alert("ডেলিভারি সিস্টেম পেজটি এখনো সেট আপ করা হয়নি।");
+                  setActivePageContent({
+                    title: "ডেলিভারি সিস্টেম ও চার্জ",
+                    content: `আমাদের কাস্টমারদের দ্রুত এবং নিরাপদ হোম ডেলিভারি নিশ্চিত করতে আমরা বিশ্বস্ত কুরিয়ার সার্ভিসের মাধ্যমে সারা বাংলাদেশে পণ্য পৌঁছে দিচ্ছি।\n\n• ডেলিভারি সময়সীমা:\n- ঢাকা সিটির মধ্যে: অর্ডার কনফার্ম করার ১ থেকে ২ কার্যদিবসের মধ্যে।\n- ঢাকা সিটির বাইরে (সারা দেশ): অর্ডার কনফার্ম করার ৩ থেকে ৫ কার্যদিবসের মধ্যে।\n\n• ডেলিভারি চার্জ:\n- ঢাকা সিটি: ৳ ৭০\n- ঢাকা সিটি ও এর আশেপাশের এলাকা: ৳ ১০০\n- সারা বাংলাদেশ (হোম ডেলিভারি): ৳ ১৩০`
+                  });
                 }} 
                 className="text-purple-400 font-semibold hover:underline text-left">
                 📦 ডেলিভারি সিস্টেম
               </button>
               <button 
                 onClick={() => {
-                  const found = customPages.find(p => p.id.toString() === settings.returnPolicyUrl);
-                  if (found) setActivePageContent(found);
-                  else alert("রিটার্ন পলিসি পেজটি এখনো সেট আপ করা হয়নি।");
+                  setActivePageContent({
+                    title: "রিটার্ন ও রিফান্ড পলিসি",
+                    content: `আমাদের মূল লক্ষ্য হলো আপনাকে শতভাগ সন্তুষ্ট করা। তবে কোনো কারণে ত্রুটিযুক্ত পণ্য পেলে আমাদের রয়েছে সহজ রিটার্ন সুবিধা।\n\n• শর্তাবলী:\n- পণ্য হাতে পাওয়ার পর সর্বোচ্চ ৩ দিনের মধ্যে জানাতে হবে।\n- পণ্যটি অবশ্যই অব্যবহৃত ও অক্ষত থাকতে হবে।\n\n• রিফান্ড প্রক্রিয়া:\n- পণ্য হাতে পাওয়ার পর ৩ থেকে ৭ কার্যদিবসের মধ্যে আপনার বিকাশ বা ব্যাংক অ্যাকাউন্টে টাকা ফেরত দেওয়া হবে।`
+                  });
                 }} 
                 className="text-purple-400 font-semibold hover:underline text-left">
                 🔄 রিটার্ন পলিসি
@@ -1041,4 +1043,4 @@ export default function App() {
       </footer>
     </div>
   );
- }
+}
