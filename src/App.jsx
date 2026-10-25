@@ -46,8 +46,8 @@ const INITIAL_SETTINGS = {
   storeName: "OfferFizz BD",
   bannerTitle: "Welcome to OfferFizz BD!",
   bannerSubtitle: "কম দামে সেরা অফারে প্রিমিয়াম প্রোডাক্ট কিনুন।",
-  bannerImage: "",
-  bkashNumber: "01963590338",
+  bannerImage: "https://i.ibb.co/image_23.png"
+bkashNumber: "01963590338",
   nagadNumber: "01963590338",
   contactPhone: "01963590338",
   contactEmail: "support@offerfizzbd.com",
