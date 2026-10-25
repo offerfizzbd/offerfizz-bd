@@ -95,7 +95,6 @@ export default function App() {
   const [newPageForm, setNewPageForm] = useState({ title: '', content: '' });
   const [activePageContent, setActivePageContent] = useState(null);
 
-  // Secret URL detection for /Admin.J
   useEffect(() => {
     const handleHashOrPath = () => {
       const path = window.location.pathname + window.location.hash;
@@ -162,7 +161,6 @@ export default function App() {
     setFormErrors({});
   };
 
-  // Automatic delivery charge based on address keywords
   const isInsideDhaka = orderForm.address.toLowerCase().includes('dhaka') || orderForm.address.includes('ঢাকা');
   const deliveryCharge = isInsideDhaka ? 60 : 120;
 
@@ -250,8 +248,6 @@ export default function App() {
     if (!productForm.name || !productForm.price) return alert("নাম এবং দাম আবশ্যক!");
 
     const colorsList = productForm.colorsStr ? productForm.colorsStr.split(',').map(c => c.trim()) : [];
-    
-    // Auto-map color images if multiple images uploaded
     let colorImgs = productForm.colorImages || {};
     if (productForm.images.length > 0 && colorsList.length > 0) {
       colorsList.forEach((clr, idx) => {
@@ -697,7 +693,7 @@ export default function App() {
                       </div>
 
                       <div>
-                        className="block font-bold text-gray-600 mb-1">প্রোডাক্ট ছবি নির্বাচন করুন (একাধিক ছবি দিলে প্রতিটি কালারের সাথে ম্যাচ হবে):</label>
+                        <label className="block font-bold text-gray-600 mb-1">প্রোডাক্ট ছবি নির্বাচন করুন (একাধিক ছবি দিলে প্রতিটি কালারের সাথে ম্যাচ হবে):</label>
                         {editingProductId && productForm.images.length > 0 && (
                           <div className="flex gap-2 mb-2">
                             {productForm.images.map((img, idx) => (
@@ -816,7 +812,7 @@ export default function App() {
                     </form>
 
                     <div className="bg-white p-3 rounded-xl border space-y-2">
-                      <h3 className="font-bold border-b pb-1">তৈরি করা পেজসমূহ (লিংক কপি করে ফুটারে বসাতে পারেন):</h3>
+                      <h3 className="font-bold border-b pb-1">তৈরি করা পেজসমূহ (আইডি কপি করে নিচে সেটিংসে বসান):</h3>
                       {customPages.length === 0 ? <p className="text-gray-400">কোনো পেজ তৈরি করা হয়নি।</p> : (
                         customPages.map(page => (
                           <div key={page.id} className="flex justify-between items-center border-b pb-2">
@@ -877,7 +873,7 @@ export default function App() {
           </main>
         )}
 
-        {/* Order Modal with Color Images, Quantity & Strict Address Charge */}
+        {/* Order Modal */}
         {selectedProduct && (
           <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 text-xs">
             <div className="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 max-h-[90vh] overflow-y-auto">
@@ -885,7 +881,6 @@ export default function App() {
               <form onSubmit={handleConfirmOrder} className="space-y-2">
                 <div><label className="block font-bold mb-1">প্রোডাক্ট:</label><p className="bg-gray-100 p-2 rounded">{selectedProduct.name}</p></div>
                 
-                {/* Color Selection with Images */}
                 {selectedProduct.colors && selectedProduct.colors.length > 0 && (
                   <div>
                     <label className="block font-bold mb-1">কালার নির্বাচন করুন:</label>
@@ -915,7 +910,7 @@ export default function App() {
                 </div>
 
                 <div>
-                  <label className="block font-bold mb-1">সম্পূর্ণ ঠিকানা (যেখানে ঢাকার ভেতর বা বাইরে অটো ডিটেক্ট হবে):</label>
+                  <label className="block font-bold mb-1">সম্পূর্ণ ঠিকানা:</label>
                   <textarea placeholder="আপনার সম্পূর্ণ ঠিকানা লিখুন..." value={orderForm.address} onChange={(e) => setOrderForm({ ...orderForm, address: e.target.value })} className={`w-full border rounded p-2 ${formErrors.address ? 'border-red-500 bg-red-50' : ''}`} rows="2"></textarea>
                 </div>
 
@@ -945,7 +940,7 @@ export default function App() {
                   </select>
                 </div>
 
-              {(orderForm.paymentMethod === 'bKash' || orderForm.paymentMethod === 'Nagad') && (
+                {(orderForm.paymentMethod === 'bKash' || orderForm.paymentMethod === 'Nagad') && (
                   <div className="bg-purple-50 p-2 rounded-xl border space-y-2">
                     <p className="text-[11px] text-purple-800 font-semibold">টাকা পাঠিয়ে TrxID এবং স্ক্রিনশট দিন:</p>
                     <input type="text" placeholder="TrxID লিখুন" required value={orderForm.trxId} onChange={(e) => setOrderForm({ ...orderForm, trxId: e.target.value })} className="w-full border rounded p-1.5 bg-white" />
@@ -963,7 +958,7 @@ export default function App() {
           </div>
         )}
 
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
           <button onClick={() => { setActiveTab('home'); setActivePageContent(null); }} className={activeTab === 'home' && !activePageContent ? 'text-purple-700 font-bold' : ''}>🛍️ হোম</button>
           <button onClick={() => { setActiveTab('profile'); setActivePageContent(null); }} className={activeTab === 'profile' && !activePageContent ? 'text-purple-700 font-bold' : ''}>👤 প্রোফাইল</button>
         </div>
@@ -1010,6 +1005,3 @@ export default function App() {
     </div>
   );
 }
-
-
-              
