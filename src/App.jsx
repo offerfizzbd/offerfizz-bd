@@ -1,4 +1,23 @@
 import React, { useState, useEffect } from 'react';
+import { initializeApp } from "firebase/app";
+import { getFirestore, collection, addDoc } from "firebase/firestore";
+import { getAnalytics, logEvent } from "firebase/analytics";
+
+// ফায়ারবেস কনফিগারেশন
+const firebaseConfig = {
+  apiKey: "AIzaSyAbQA6QPiq2WYHEZGiwrcRxLW5lUrWa3I",
+  authDomain: "offerfizz-bd.firebaseapp.com",
+  projectId: "offerfizz-bd",
+  storageBucket: "offerfizz-bd.firebasestorage.app",
+  messagingSenderId: "520069924104",
+  appId: "1:520069924104:web:66243c62fcbcao2ec9d8bd",
+  measurementId: "G-8NS7RNZ9Q5"
+};
+
+// ফায়ারবেস ইনিশিয়ালাইজ
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const analytics = getAnalytics(app);
 
 const INITIAL_PRODUCTS = [
   {
@@ -96,6 +115,9 @@ export default function App() {
   const [activePageContent, setActivePageContent] = useState(null);
 
   useEffect(() => {
+    // ফায়ারবেস অ্যানালিটিক্স পেজ ভিউ লগ করা
+    logEvent(analytics, 'page_view', { page_title: 'Home' });
+
     const handleHashOrPath = () => {
       const path = window.location.pathname + window.location.hash;
       if (path.includes('Admin.J')) {
@@ -164,7 +186,8 @@ export default function App() {
   const isInsideDhaka = orderForm.address.toLowerCase().includes('dhaka') || orderForm.address.includes('ঢাকা');
   const deliveryCharge = isInsideDhaka ? 60 : 120;
 
-  const handleConfirmOrder = (e) => {
+  // ফায়ারবেস ডাটাবেজে অর্ডার সেভ করার ফাংশন
+  const handleConfirmOrder = async (e) => {
     e.preventDefault();
     let errors = {};
     if (!orderForm.name.trim()) errors.name = true;
@@ -210,6 +233,13 @@ export default function App() {
       orderTime: nowTime,
       confirmedTime: null
     };
+
+    try {
+      // Firestore Database-এ অর্ডার সেভ করা
+      await addDoc(collection(db, "orders"), newOrder);
+    } catch (error) {
+      console.error("Error saving order to Firestore:", error);
+    }
 
     setOrders([newOrder, ...orders]);
     setSelectedProduct(null);
@@ -287,7 +317,6 @@ export default function App() {
         sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['Standard'], 
         stock: Number(productForm.stock)
       };
-      // পুরোনো পোস্ট যেন মুছে না যায়, সেজন্য প্রিভিয়াস প্রোডাক্ট লিস্টের সাথে নতুন প্রোডাক্ট যুক্ত করা হয়েছে
       setProducts(prevProducts => [newProd, ...prevProducts]);
       alert("নতুন প্রোডাক্ট সফলভাবে পোস্ট করা হয়েছে!");
     }
@@ -430,7 +459,7 @@ export default function App() {
           </div>
         </header>
 
-        {activePageContent ? (
+          {activePageContent ? (
           <main className="p-4 max-w-2xl mx-auto bg-white rounded-2xl shadow-sm border mt-4 text-xs space-y-3">
             <button onClick={() => setActivePageContent(null)} className="bg-purple-100 text-purple-700 px-3 py-1 rounded font-bold mb-2">← ফিরে যান</button>
             <h2 className="text-lg font-bold text-purple-800 border-b pb-2">{activePageContent.title}</h2>
@@ -502,7 +531,6 @@ export default function App() {
             </div>
           </main>
         )}
-
         {/* Product Details Modal */}
         {viewProductDetails && (
           <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 text-xs">
@@ -592,7 +620,6 @@ export default function App() {
             )}
           </main>
         )}
-
         {/* Admin Tab */}
         {activeTab === 'admin' && !activePageContent && (
           <main className="p-4 max-w-2xl mx-auto text-xs">
@@ -633,7 +660,7 @@ export default function App() {
                             <div className="flex items-center gap-2">
                               <span className={`px-2 py-0.5 rounded text-[10px] ${ord.status === 'Confirmed' ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white'}`}>{ord.status}</span>
                               {ord.status === 'Pending' && (
-                                <button onClick={() => updateOrderStatus(ord.id, 'Confirmed')} className="bg-emerald-600 text-white px-2.5 py-1 rounded font-bold shadow-sm">Confirm (গ্রিন)</button>
+                                <button onClick={() => updateOrderStatus(ord.id, 'Confirmed')} className="bg-emerald-600 text-white px-2.5 py-1 rounded font-bold shadow-sm">Confirm</button>
                               )}
                               <button onClick={() => deleteOrder(ord.id)} className="bg-red-50 text-red-600 px-2 py-1 rounded font-bold">ডিলিট</button>
                             </div>
@@ -647,6 +674,12 @@ export default function App() {
                           </div>
                           <p><strong>ঠিকানা:</strong> {ord.address}</p>
                           <p><strong>পেমেন্ট:</strong> {ord.paymentMethod} | TrxID: {ord.trxId}</p>
+                          {ord.paymentScreenshot && (
+                            <div>
+                              <p className="font-semibold text-purple-700">পেমেন্ট স্ক্রিনশট:</p>
+                              <img src={ord.paymentScreenshot} alt="Payment Screenshot" className="w-20 h-20 object-cover rounded border mt-1" />
+                            </div>
+                          )}
                           <p className="text-gray-500 text-[11px]">অর্ডারের সময়: {ord.orderTime}</p>
                           {ord.confirmedTime && <p className="text-emerald-700 text-[11px]">কনফার্মেশনের সময়: {ord.confirmedTime}</p>}
                           <p className="font-bold text-emerald-700">মোট: ৳{ord.totalAmount}</p>
@@ -655,7 +688,6 @@ export default function App() {
                     )}
                   </div>
                 )}
-
                 {/* Products & Editing */}
                 {adminSection === 'products' && (
                   <div className="space-y-4">
@@ -672,7 +704,6 @@ export default function App() {
                           <input type="number" placeholder="অফার দাম (৳)" value={productForm.price} onChange={(e) => setProductForm({ ...productForm, price: e.target.value })} className="border p-2 rounded w-full" required />
                         </div>
                       </div>
-                      
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <label className="block font-semibold mb-1">ক্যাটাগরি:</label>
@@ -695,7 +726,7 @@ export default function App() {
                       </div>
 
                       <div>
-                        <label className="block font-bold text-gray-600 mb-1">প্রোডাক্ট ছবি নির্বাচন করুন (একাধিক ছবি দিলে প্রতিটি কালারের সাথে ম্যাচ হবে):</label>
+                        <label className="block font-bold text-gray-600 mb-1">প্রোডাক্ট ছবি নির্বাচন করুন:</label>
                         {editingProductId && productForm.images.length > 0 && (
                           <div className="flex gap-2 mb-2">
                             {productForm.images.map((img, idx) => (
@@ -733,8 +764,7 @@ export default function App() {
                     </div>
                   </div>
                 )}
-
-                {/* Categories & Subcategories Management */}
+                {/* Categories Management */}
                 {adminSection === 'categories' && (
                   <div className="space-y-4">
                     <div className="bg-white p-3 rounded-xl border space-y-3">
@@ -782,7 +812,7 @@ export default function App() {
                 {/* Customers Management */}
                 {adminSection === 'customers' && (
                   <div className="space-y-3">
-                    <h3 className="font-bold">কাস্টমার অ্যাকাউন্ট ম্যানেজমেন্ট (নাম, ফোন, ঠিকানা)</h3>
+                    <h3 className="font-bold">কাস্টমার অ্যাকাউন্ট ম্যানেজমেন্ট</h3>
                     {customers.length === 0 ? <p className="bg-white p-4 rounded border text-center text-gray-500">কোনো রেজিস্টার্ড কাস্টমার নেই</p> : (
                       customers.map(cust => (
                         <div key={cust.mobile} className="bg-white p-3 rounded-xl border flex justify-between items-center">
@@ -791,7 +821,7 @@ export default function App() {
                             <p className="text-gray-700 font-semibold">মোবাইল: {cust.mobile}</p>
                             <p className="text-gray-600 text-[11px]">ঠিকানা: {cust.address || 'ঠিকানা দেওয়া হয়নি'}</p>
                             <span className={`px-2 py-0.5 rounded text-[10px] inline-block mt-1 ${cust.isFrozen ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                              {cust.isFrozen ? 'Frozen (স্থগিত)' : 'Active (সক্রিয়)'}
+                              {cust.isFrozen ? 'Frozen' : 'Active'}
                             </span>
                           </div>
                           <button onClick={() => toggleCustomerFreeze(cust.mobile)} className={`px-3 py-1.5 rounded font-bold text-white ${cust.isFrozen ? 'bg-emerald-600' : 'bg-red-600'}`}>
@@ -807,14 +837,14 @@ export default function App() {
                 {adminSection === 'pages' && (
                   <div className="space-y-4">
                     <form onSubmit={handleCreatePage} className="bg-white p-3.5 rounded-xl border space-y-2">
-                      <h3 className="font-bold border-b pb-1 text-purple-800">📄 নতুন পেজ তৈরি করুন (যেমন: ডেলিভারি পলিসি / রিটার্ন পলিসি)</h3>
-                      <input type="text" placeholder="পেজের শিরোনাম (যেমন: ডেলিভারি সিস্টেম)" value={newPageForm.title} onChange={(e) => setNewPageForm({ ...newPageForm, title: e.target.value })} className="border p-2 rounded w-full" required />
+                      <h3 className="font-bold border-b pb-1 text-purple-800">📄 নতুন পেজ তৈরি করুন</h3>
+                      <input type="text" placeholder="পেজের শিরোনাম" value={newPageForm.title} onChange={(e) => setNewPageForm({ ...newPageForm, title: e.target.value })} className="border p-2 rounded w-full" required />
                       <textarea placeholder="পেজের বিস্তারিত কন্টেন্ট..." value={newPageForm.content} onChange={(e) => setNewPageForm({ ...newPageForm, content: e.target.value })} className="border p-2 rounded w-full" rows="4" required></textarea>
                       <button type="submit" className="bg-purple-700 text-white font-bold py-2 rounded w-full">পেজ পাবলিশ করুন</button>
                     </form>
 
                     <div className="bg-white p-3 rounded-xl border space-y-2">
-                      <h3 className="font-bold border-b pb-1">তৈরি করা পেজসমূহ (আইডি কপি করে নিচে সেটিংসে বসান):</h3>
+                      <h3 className="font-bold border-b pb-1">তৈরি করা পেজসমূহ:</h3>
                       {customPages.length === 0 ? <p className="text-gray-400">কোনো পেজ তৈরি করা হয়নি।</p> : (
                         customPages.map(page => (
                           <div key={page.id} className="flex justify-between items-center border-b pb-2">
@@ -832,8 +862,7 @@ export default function App() {
                     </div>
                   </div>
                 )}
-
-                {/* Settings & Footer Info */}
+                 {/* Settings */}
                 {adminSection === 'settings' && (
                   <div className="space-y-4">
                     <div className="bg-white p-3 rounded-xl border space-y-2">
@@ -846,9 +875,8 @@ export default function App() {
 
                     <div className="bg-white p-3 rounded-xl border space-y-2">
                       <h3 className="font-bold border-b pb-1">ফুটার পলিসি পেজ আইডি সেটআপ</h3>
-                      <p className="text-[11px] text-gray-500">'Pages' ট্যাব থেকে পেজ তৈরি করে তার আইডি এখানে বসান যাতে ফুটার লিংকে ক্লিক করলে সেই পেজ খোলে।</p>
-                      <div><label className="block font-semibold mb-1">ডেলিভারি সিস্টেম পেজ আইডি:</label><input type="text" value={settings.deliveryPolicyUrl} onChange={(e) => setSettings({ ...settings, deliveryPolicyUrl: e.target.value })} className="border rounded p-2 w-full" placeholder="যেমন: 1740000000" /></div>
-                      <div><label className="block font-semibold mb-1">রিটার্ন পলিসি পেজ আইডি:</label><input type="text" value={settings.returnPolicyUrl} onChange={(e) => setSettings({ ...settings, returnPolicyUrl: e.target.value })} className="border rounded p-2 w-full" placeholder="যেমন: 1740000001" /></div>
+                      <div><label className="block font-semibold mb-1">ডেলিভারি সিস্টেম পেজ আইডি:</label><input type="text" value={settings.deliveryPolicyUrl} onChange={(e) => setSettings({ ...settings, deliveryPolicyUrl: e.target.value })} className="border rounded p-2 w-full" /></div>
+                      <div><label className="block font-semibold mb-1">রিটার্ন পলিসি পেজ আইডি:</label><input type="text" value={settings.returnPolicyUrl} onChange={(e) => setSettings({ ...settings, returnPolicyUrl: e.target.value })} className="border rounded p-2 w-full" /></div>
                     </div>
 
                     <div className="bg-white p-3 rounded-xl border space-y-2">
@@ -925,7 +953,6 @@ export default function App() {
                   </div>
                   <div>
                     <label className="block font-bold mb-1">পরিমাণ (পিস):</label>
-                    {/* পিস ইনপুট ফিক্স: ব্যাকস্পেস দিয়ে সংখ্যা মুছে নতুন সংখ্যা সহজে লেখার জন্য ব্ল্যাংক হ্যান্ডেল করা হয়েছে */}
                     <input 
                       type="number" 
                       min="1" 
@@ -951,7 +978,6 @@ export default function App() {
                     <option value="Nagad">নগদ পার্সোনাল ({settings.nagadNumber})</option>
                   </select>
                 </div>
-
                 {(orderForm.paymentMethod === 'bKash' || orderForm.paymentMethod === 'Nagad') && (
                   <div className="bg-purple-50 p-2 rounded-xl border space-y-2">
                     <p className="text-[11px] text-purple-800 font-semibold">টাকা পাঠিয়ে TrxID এবং স্ক্রিনশট দিন:</p>
@@ -976,7 +1002,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Footer with separate Delivery & Return Policy Clickable Links */}
       <footer className="bg-gray-900 text-gray-300 p-6 mt-8 text-xs space-y-4">
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-gray-800 pb-4">
           <div>
@@ -995,7 +1020,7 @@ export default function App() {
                 onClick={() => {
                   const found = customPages.find(p => p.id.toString() === settings.deliveryPolicyUrl);
                   if (found) setActivePageContent(found);
-                  else alert("ডেলিভারি সিস্টেম পেজটি এখনো সেট আপ করা হয়নি। অ্যাডমিন প্যানেল থেকে পেজ তৈরি করে আইডি দিন।");
+                  else alert("ডেলিভারি সিস্টেম পেজটি এখনো সেট আপ করা হয়নি।");
                 }} 
                 className="text-purple-400 font-semibold hover:underline text-left">
                 📦 ডেলিভারি সিস্টেম
@@ -1004,7 +1029,7 @@ export default function App() {
                 onClick={() => {
                   const found = customPages.find(p => p.id.toString() === settings.returnPolicyUrl);
                   if (found) setActivePageContent(found);
-                  else alert("রিটার্ন পলিসি পেজটি এখনো সেট আপ করা হয়নি। অ্যাডমিন প্যানেল থেকে পেজ তৈরি করে আইডি দিন।");
+                  else alert("রিটার্ন পলিসি পেজটি এখনো সেট আপ করা হয়নি।");
                 }} 
                 className="text-purple-400 font-semibold hover:underline text-left">
                 🔄 রিটার্ন পলিসি
@@ -1016,4 +1041,4 @@ export default function App() {
       </footer>
     </div>
   );
-}
+ }
