@@ -67,7 +67,9 @@ const INITIAL_CATEGORIES = [
 ];
 
 export default function App() {
-  const [products, setProducts] = useState(() => JSON.parse(localStorage.getItem('offerfizz_products')) || INITIAL_PRODUCTS);
+  // ওপরের useEffect থেকে ফেচ করা প্রোডাক্টগুলো সরাসরি এখানে ব্যবহার করার জন্য:
+// (যেহেতু ওপরের দিকে const [products, setProducts] = useState([]); ডিক্লেয়ার করা আছে, তাই নিচের লাইনটি থেকে শুধু স্টেট ডিক্লেয়ারেশন ঠিক করতে হবে)
+  
   const [orders, setOrders] = useState(() => JSON.parse(localStorage.getItem('offerfizz_orders')) || []);
   const [settings, setSettings] = useState(() => JSON.parse(localStorage.getItem('offerfizz_settings')) || INITIAL_SETTINGS);
   const [categories, setCategories] = useState(() => JSON.parse(localStorage.getItem('offerfizz_categories')) || INITIAL_CATEGORIES);
