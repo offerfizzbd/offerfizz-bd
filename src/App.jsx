@@ -104,7 +104,7 @@ export default function App() {
   const [editingProductId, setEditingProductId] = useState(null);
   const [productForm, setProductForm] = useState({
     name: '', regularPrice: '', price: '', category: 'Fashion', subcategory: '',
-    colorsStr: '',
+    colorsStr:
 
   const [newCatName, setNewCatName] = useState('');
   const [newSubCatName, setNewSubCatName] = useState('');
