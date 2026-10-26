@@ -274,55 +274,71 @@ export default function App() {
     }
   };
 
-  const handleSaveProduct = (e) => {
-    e.preventDefault();
-    if (!productForm.name || !productForm.price) return alert("নাম এবং দাম আবশ্যক!");
+  // Firestore-এ প্রোডাক্ট সেভ/এডিট করার আপডেট করা ফাংশন
+const handleSaveProduct = async (e) => {
+  e.preventDefault();
+  
+  if (!productForm.name || !productForm.price) {
+    alert("দয়া করে প্রোডাক্টের নাম ও অফার দাম সঠিকভাবে দিন!");
+    return;
+  }
 
-    const colorsList = productForm.colorsStr ? productForm.colorsStr.split(',').map(c => c.trim()) : [];
-    let colorImgs = productForm.colorImages || {};
-    if (productForm.images.length > 0 && colorsList.length > 0) {
-      colorsList.forEach((clr, idx) => {
-        colorImgs[clr] = productForm.images[idx % productForm.images.length];
-      });
-    }
-
-    if (editingProductId) {
-      setProducts(products.map(p => p.id === editingProductId ? {
-        ...p, 
-        name: productForm.name, 
-        regularPrice: Number(productForm.regularPrice) || Number(productForm.price),
-        price: Number(productForm.price), 
-        category: productForm.category, 
-        subcategory: productForm.subcategory || '', 
-        colors: colorsList,
-        colorImages: colorImgs,
-        images: productForm.images.length > 0 ? productForm.images : p.images,
-        description: productForm.description, 
-        sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['Standard'], 
-        stock: Number(productForm.stock)
-      } : p));
-      setEditingProductId(null);
-      alert("প্রোডাক্ট আপডেট হয়েছে!");
-    } else {
-      const newProd = {
-        id: Date.now(), 
-        name: productForm.name, 
-        regularPrice: Number(productForm.regularPrice) || Number(productForm.price),
-        price: Number(productForm.price), 
-        category: productForm.category, 
-        subcategory: productForm.subcategory || '',
-        colors: colorsList,
-        colorImages: colorImgs,
-        images: productForm.images.length > 0 ? productForm.images : ["https://via.placeholder.com/150"],
-        description: productForm.description || "প্রিমিয়াম প্রোডাক্ট।", 
-        sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['Standard'], 
-        stock: Number(productForm.stock)
-      };
-      setProducts(prevProducts => [newProd, ...prevProducts]);
-      alert("নতুন প্রোডাক্ট সফলভাবে পোস্ট করা হয়েছে!");
-    }
-    setProductForm({ name: '', regularPrice: '', price: '', category: 'Fashion', subcategory: '', colorsStr: 'Black, Navy Blue', images: [], colorImages: {}, description: '', sizes: 'M, L, XL', stock: 10 });
+  // ফায়ারস্টোরে সেভ করার জন্য প্রোডাক্ট ডাটা সাজানো
+  const newProductData = {
+    name: productForm.name,
+    price: Number(productForm.price),
+    regularPrice: Number(productForm.regularPrice) || Number(productForm.price),
+    category: productForm.category || 'Fashion',
+    subcategory: productForm.subcategory || '',
+    images: productForm.images || [],
+    colors: productForm.colors || [],
+    colorImages: productForm.colorImages || {},
+    sizes: productForm.sizes || ['M', 'L', 'XL'],
+    description: productForm.description || '',
+    createdAt: new Date().toISOString()
   };
+
+  try {
+    if (editingProductId) {
+      // ১. প্রোডাক্ট এডিট করার ক্ষেত্রে (Firestore-এ আপডেট)
+      const productRef = doc(db, "products", editingProductId);
+      await updateDoc(productRef, newProductData);
+      
+      setProducts(prevProducts =>
+        prevProducts.map(p => p.id === editingProductId ? { id: editingProductId, ...newProductData } : p)
+      );
+      alert("প্রোডাক্ট সফলভাবে আপডেট হয়েছে!");
+    } else {
+      // ২. নতুন প্রোডাক্ট যুক্ত করার ক্ষেত্রে (Firestore-এ সেভ)
+      const docRef = await addDoc(collection(db, "products"), newProductData);
+      
+      setProducts(prevProducts => [
+        { id: docRef.id, ...newProductData },
+        ...prevProducts
+      ]);
+      alert("নতুন প্রোডাক্ট ডাটাবেজে সফলভাবে যোগ করা হয়েছে!");
+    }
+
+    // ফর্ম ক্লিয়ার করা
+    setEditingProductId(null);
+    setProductForm({
+      name: '',
+      price: '',
+      regularPrice: '',
+      category: categories[1]?.name || 'Fashion',
+      subcategory: '',
+      images: [],
+      colors: [],
+      colorImages: {},
+      sizes: ['M', 'L', 'XL'],
+      description: ''
+    });
+
+  } catch (error) {
+    console.error("Firestore product save error:", error);
+    alert("প্রোডাক্ট সেভ করতে সমস্যা হয়েছে: " + error.message);
+  }
+};
 
   const handleEditProductClick = (product) => {
     setEditingProductId(product.id);
