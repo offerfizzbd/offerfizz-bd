@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, getDocs, addDoc } from "firebase/firestore";
+import { getFirestore, collection, getDocs, addDoc, doc, updateDoc } from "firebase/firestore";
 import { getAnalytics, logEvent } from "firebase/analytics";
 
 // ফায়ারবেস কনফিগারেশন
