@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, getDocs, addDoc, doc, updateDoc } from "firebase/firestore";
+import { getFirestore, collection, addDoc } from "firebase/firestore";
 import { getAnalytics, logEvent } from "firebase/analytics";
 
 // ফায়ারবেস কনফিগারেশন
@@ -19,39 +19,40 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const analytics = getAnalytics(app);
 
-const [products, setProducts] = useState([]);
-
-useEffect(() => {
-  const fetchProducts = async () => {
-    try {
-      const querySnapshot = await getDocs(collection(db, "products"));
-      const productList = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      if (productList.length > 0) {
-        setProducts(productList);
-      }
-    } catch (error) {
-      console.error("Error fetching products: ", error);
-    }
-  };
-
-  fetchProducts();
-}, []);
-
+const INITIAL_PRODUCTS = [
+  {
+    id: 1,
+    name: "Exclusive Padding Jacket for Men 🧥",
+    regularPrice: 1800,
+    price: 1300,
+    category: "Fashion",
+    subcategory: "Men",
+    colors: ["Black", "Navy Blue", "Olive"],
+    colorImages: {
+      "Black": "https://images.unsplash.com/photo-1544441893-675973e31985?w=500&q=80",
+      "Navy Blue": "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&q=80",
+      "Olive": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80"
+    },
+    images: [
+      "https://images.unsplash.com/photo-1544441893-675973e31985?w=500&q=80"
+    ],
+    description: "🔥 Exclusive European Style Winter Jacket\n✨ Stylish and comfortable for winter\n📏 Size Chart: M, L, XL",
+    sizes: ["M", "L", "XL"],
+    stock: 15
+  }
+];
 
 const INITIAL_SETTINGS = {
   storeName: "OfferFizz BD",
   bannerTitle: "Welcome to OfferFizz BD!",
-  bannerSubtitle: "কম দামে সেরা অফারে প্রিমিয়াম প্রোডাক্ট কিনুন",
-  bannerImage: "https://i.ibb.co/image_23.png",
-  bkashNumber: "01963503338",
-  nagadNumber: "01963503338",
-  contactPhone: "01963503338",
+  bannerSubtitle: "কম দামে সেরা অফারে প্রিমিয়াম প্রোডাক্ট কিনুন।",
+  bannerImage: "",
+  bkashNumber: "01963590338",
+  nagadNumber: "01963590338",
+  contactPhone: "01963590338",
   contactEmail: "support@offerfizzbd.com",
   facebookUrl: "https://facebook.com",
-  whatsappUrl: "https://wa.me/8801963503338",
+  whatsappUrl: "https://wa.me/8801963590338",
   superAdminUser: "জুয়েল",
   superAdminPass: "1234",
   deliveryPolicyUrl: "",
@@ -67,9 +68,7 @@ const INITIAL_CATEGORIES = [
 ];
 
 export default function App() {
-  // ওপরের useEffect থেকে ফেচ করা প্রোডাক্টগুলো সরাসরি এখানে ব্যবহার করার জন্য:
-// (যেহেতু ওপরের দিকে const [products, setProducts] = useState([]); ডিক্লেয়ার করা আছে, তাই নিচের লাইনটি থেকে শুধু স্টেট ডিক্লেয়ারেশন ঠিক করতে হবে)
-  
+  const [products, setProducts] = useState(() => JSON.parse(localStorage.getItem('offerfizz_products')) || INITIAL_PRODUCTS);
   const [orders, setOrders] = useState(() => JSON.parse(localStorage.getItem('offerfizz_orders')) || []);
   const [settings, setSettings] = useState(() => JSON.parse(localStorage.getItem('offerfizz_settings')) || INITIAL_SETTINGS);
   const [categories, setCategories] = useState(() => JSON.parse(localStorage.getItem('offerfizz_categories')) || INITIAL_CATEGORIES);
@@ -104,7 +103,7 @@ export default function App() {
   const [editingProductId, setEditingProductId] = useState(null);
   const [productForm, setProductForm] = useState({
     name: '', regularPrice: '', price: '', category: 'Fashion', subcategory: '',
-    ColorsStr: 'Black, Navy Blue', images: [], colorImages: {}, description: '', sizes: 'M, L, XL', stock: 10
+    colorsStr: 'Black, Navy Blue', images: [], colorImages: {}, description: '', sizes: 'M, L, XL', stock: 10
   });
 
   const [newCatName, setNewCatName] = useState('');
@@ -274,72 +273,55 @@ export default function App() {
     }
   };
 
-  const handleSaveProduct = async (e) => {
-  e.preventDefault();
-  if (!productForm.name || !productForm.price) return alert("নাম এবং দাম আবশ্যক!");
+  const handleSaveProduct = (e) => {
+    e.preventDefault();
+    if (!productForm.name || !productForm.price) return alert("নাম এবং দাম আবশ্যক!");
 
-  // কালارগুলোকে কমা দিয়ে আলাদা করে অ্যারে তৈরি এবং কালার ইমেজ ম্যাপ তৈরি
-  const colorsList = productForm.colorsStr ? productForm.colorsStr.split(',').map(c => c.trim()).filter(Boolean) : [];
-  let colorImgs = {};
-  if (productForm.images.length > 0 && colorsList.length > 0) {
-    colorsList.forEach((clr, idx) => {
-      colorImgs[clr] = productForm.images[idx % productForm.images.length];
-    });
-  }
+    const colorsList = productForm.colorsStr ? productForm.colorsStr.split(',').map(c => c.trim()) : [];
+    let colorImgs = productForm.colorImages || {};
+    if (productForm.images.length > 0 && colorsList.length > 0) {
+      colorsList.forEach((clr, idx) => {
+        colorImgs[clr] = productForm.images[idx % productForm.images.length];
+      });
+    }
 
-  const newProductData = {
-    name: productForm.name,
-    regularPrice: Number(productForm.regularPrice) || Number(productForm.price),
-    price: Number(productForm.price),
-    category: productForm.category,
-    subcategory: productForm.subcategory || '',
-    colors: colorsList,
-    colorImages: colorImgs,
-    images: productForm.images.length > 0 ? productForm.images : ["https://via.placeholder.com/300"],
-    description: productForm.description || "প্রিমিয়াম প্রোডাক্ট",
-    sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['M', 'L', 'XL'],
-    stock: Number(productForm.stock) || 10
-  };
-
-  try {
     if (editingProductId) {
-      // ফায়ারস্টোরে আপডেট করা
-      const productRef = doc(db, "products", editingProductId);
-      await updateDoc(productRef, newProductData);
-
-      setProducts(prevProducts =>
-        prevProducts.map(p => p.id === editingProductId ? { id: editingProductId, ...newProductData } : p)
-      );
+      setProducts(products.map(p => p.id === editingProductId ? {
+        ...p, 
+        name: productForm.name, 
+        regularPrice: Number(productForm.regularPrice) || Number(productForm.price),
+        price: Number(productForm.price), 
+        category: productForm.category, 
+        subcategory: productForm.subcategory || '', 
+        colors: colorsList,
+        colorImages: colorImgs,
+        images: productForm.images.length > 0 ? productForm.images : p.images,
+        description: productForm.description, 
+        sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['Standard'], 
+        stock: Number(productForm.stock)
+      } : p));
       setEditingProductId(null);
       alert("প্রোডাক্ট আপডেট হয়েছে!");
     } else {
-      // ফায়ারস্টোরে নতুন প্রোডাক্ট যোগ করা
-      const docRef = await addDoc(collection(db, "products"), newProductData);
-
-      setProducts(prevProducts => [{ id: docRef.id, ...newProductData }, ...prevProducts]);
+      const newProd = {
+        id: Date.now(), 
+        name: productForm.name, 
+        regularPrice: Number(productForm.regularPrice) || Number(productForm.price),
+        price: Number(productForm.price), 
+        category: productForm.category, 
+        subcategory: productForm.subcategory || '',
+        colors: colorsList,
+        colorImages: colorImgs,
+        images: productForm.images.length > 0 ? productForm.images : ["https://via.placeholder.com/150"],
+        description: productForm.description || "প্রিমিয়াম প্রোডাক্ট।", 
+        sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['Standard'], 
+        stock: Number(productForm.stock)
+      };
+      setProducts(prevProducts => [newProd, ...prevProducts]);
       alert("নতুন প্রোডাক্ট সফলভাবে পোস্ট করা হয়েছে!");
     }
-
-    // ফর্ম রিসেট করা
-    setProductForm({
-      name: '',
-      regularPrice: '',
-      price: '',
-      category: categories[1]?.name || 'Fashion',
-      subcategory: '',
-      colorsStr: '',
-      images: [],
-      description: '',
-      sizes: 'M, L, XL',
-      stock: '10'
-    });
-
-  } catch (error) {
-    console.error("Error saving product:", error);
-    alert("প্রোডাক্ট সেভ করতে সমস্যা হয়েছে: " + error.message);
-  }
-};
-
+    setProductForm({ name: '', regularPrice: '', price: '', category: 'Fashion', subcategory: '', colorsStr: 'Black, Navy Blue', images: [], colorImages: {}, description: '', sizes: 'M, L, XL', stock: 10 });
+  };
 
   const handleEditProductClick = (product) => {
     setEditingProductId(product.id);
@@ -499,7 +481,6 @@ export default function App() {
                 </div>
               )}
             </div>
-
             {/* Category Tabs */}
             <div className="px-3 mb-2 flex gap-2 overflow-x-auto pb-1">
               {categories.map((cat) => (
@@ -577,7 +558,6 @@ export default function App() {
             </div>
           </div>
         )}
-
         {/* Customer Profile Tab */}
         {activeTab === 'profile' && !activePageContent && (
           <main className="p-4 max-w-md mx-auto text-xs space-y-4">
@@ -659,8 +639,7 @@ export default function App() {
                     <button key={tab} onClick={() => setAdminSection(tab)} className={`px-3 py-1 rounded-lg capitalize font-bold whitespace-nowrap ${adminSection === tab ? 'bg-purple-700 text-white' : 'bg-white border'}`}>{tab}</button>
                   ))}
                 </div>
-
-                {adminSection === 'dashboard' && (
+                 {adminSection === 'dashboard' && (
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-white p-3 rounded-xl border">মোট অর্ডার: <h3 className="text-lg font-bold">{orders.length}</h3></div>
                     <div className="bg-white p-3 rounded-xl border">মোট বিক্রি: <h3 className="text-lg font-bold text-emerald-600">৳ {orders.reduce((sum, o) => sum + o.totalAmount, 0)}</h3></div>
@@ -771,9 +750,10 @@ export default function App() {
                                 <span className="text-purple-700 font-bold">৳{p.price}</span>
                                 {p.regularPrice > p.price && <span className="text-[10px] text-gray-400 line-through">৳{p.regularPrice}</span>}
                               </div>
-                            </div>
+                           </div>
                           </div>
-                          <div className="flex gap-1">
+                          <div
+                            className="flex gap-1">
                             <button onClick={() => handleEditProductClick(p)} className="bg-blue-50 text-blue-600 font-bold px-2 py-1 rounded">✏️ Edit</button>
                             <button onClick={() => deleteProduct(p.id)} className="bg-red-50 text-red-500 font-bold px-2 py-1 rounded">✕</button>
                           </div>
@@ -826,7 +806,6 @@ export default function App() {
                     </div>
                   </div>
                 )}
-
                 {/* Customers Management */}
                 {adminSection === 'customers' && (
                   <div className="space-y-3">
@@ -880,7 +859,7 @@ export default function App() {
                     </div>
                   </div>
                 )}
-                 {/* Settings */}
+                {/* Settings */}
                 {adminSection === 'settings' && (
                   <div className="space-y-4">
                     <div className="bg-white p-3 rounded-xl border space-y-2">
@@ -984,7 +963,8 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="bg-gray-100 p-2 rounded-xl border text-[11px] font-semibold text-gray-700">
+                <div
+                  className="bg-gray-100 p-2 rounded-xl border text-[11px] font-semibold text-gray-700">
                   📍 ডেলিভারি এলাকা: <span className="text-purple-700 font-bold">{isInsideDhaka ? 'ঢাকার ভেতরে (চার্জ: ৳৬০)' : 'ঢাকার বাইরে (চার্জ: ৳১২০)'}</span>
                 </div>
 
@@ -1062,3 +1042,4 @@ export default function App() {
     </div>
   );
 }
+                
