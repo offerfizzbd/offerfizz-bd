@@ -104,7 +104,8 @@ export default function App() {
   const [editingProductId, setEditingProductId] = useState(null);
   const [productForm, setProductForm] = useState({
     name: '', regularPrice: '', price: '', category: 'Fashion', subcategory: '',
-    ColorsStr: '', images: [], colorImages: {}, description: '', sizes: 'M, L, XL', stock: 10
+    ColorsStr: 'Black, Navy Blue, Red, White, Sky Blue, Pink, Green, Yellow, Navy, Purple, Orange, Gray, Brown, Maroon',
+', images: [], colorImages: {}, description: '', sizes: 'M, L, XL', stock: 10
   });
 
   const [newCatName, setNewCatName] = useState('');
