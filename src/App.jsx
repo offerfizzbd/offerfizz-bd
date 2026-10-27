@@ -916,21 +916,10 @@ export default function App() {
               <form onSubmit={handleConfirmOrder} className="space-y-2">
                 <div><label className="block font-bold mb-1">প্রোডাক্ট:</label><p className="bg-gray-100 p-2 rounded">{selectedProduct.name}</p></div>
                 
-                {selectedProduct.colors && selectedProduct.colors.length > 0 && (
-                  <div>
-                    <label className="block font-bold mb-1">কালার নির্বাচন করুন:</label>
-                    <div className="flex gap-2 flex-wrap">
-                      {selectedProduct.colors.map((clr) => {
-                        const imgUrl = selectedProduct.colorImages?.[clr] || selectedProduct.images?.[0];
-                        const isSelected = selectedColorForOrder === clr;
-                        return (
-                          <div key={clr} onClick={() => setSelectedColorForOrder(clr)} className={`cursor-pointer border-2 rounded-lg p-1 flex items-center gap-1.5 ${isSelected ? 'border-purple-700 bg-purple-50' : 'border-gray-200'}`}>
-                            <img src={imgUrl} alt="" className="w-8 h-8 object-cover rounded" />
-                            <span className="text-[11px] font-bold px-1">{clr}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
+                {/* প্রোডাক্টের ছবি দেখানোর অংশ (কালার বাদ দিয়ে শুধু ছবি ও নাম শো করবে) */}
+                {selectedProduct.images && selectedProduct.images.length > 0 && (
+                  <div className="flex justify-center mb-2">
+                    <img src={selectedProduct.images[0]} alt={selectedProduct.name} className="w-20 h-20 object-cover rounded-lg border" />
                   </div>
                 )}
 
@@ -1001,6 +990,7 @@ export default function App() {
             </div>
           </div>
         )}
+
 
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
           <button onClick={() => { setActiveTab('home'); setActivePageContent(null); }} className={activeTab === 'home' && !activePageContent ? 'text-purple-700 font-bold' : ''}>🛍️ হোম</button>
