@@ -926,7 +926,8 @@ export default function App() {
         return (
           <div 
             key={idx} 
-            onClick={() => setOrderForm({ ...orderForm, productImage: imgUrl })} 
+            onClick={() => setOrderForm(prev => ({ ...prev, productImage: String(imgUrl) }))}
+
             className={`cursor-pointer border-2 rounded-lg p-1 flex items-center ${isSelected ? 'border-purple-700 bg-purple-50' : 'border-gray-200'}`}
           >
             <img src={imgUrl} alt="" className="w-12 h-12 object-cover rounded" />
