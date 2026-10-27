@@ -222,7 +222,7 @@ export default function App() {
     const newOrder = {
       id: "ORD-" + Date.now().toString().slice(-6),
       productName: selectedProduct.name,
-      productImage: orderForm.productImage || (selectedProduct.images && selectedProduct.images.length > 0 ? selectedProduct.images[0] : ''),
+      productImage: String(orderForm.productImage || (selectedProduct.images && selectedProduct.images.length > 0 ? selectedProduct.images[0] : '')),
 
       productPrice: unitPrice,
       quantity: qty,
@@ -926,7 +926,8 @@ export default function App() {
         return (
           <div 
             key={idx} 
-            onClick={() => setOrderForm(prev => ({ ...prev, productImage: String(imgUrl) }))}
+            onClick={() => setOrderForm({ ...orderForm, productImage: String(imgUrl) })}
+
 
             className={`cursor-pointer border-2 rounded-lg p-1 flex items-center ${isSelected ? 'border-purple-700 bg-purple-50' : 'border-gray-200'}`}
           >
