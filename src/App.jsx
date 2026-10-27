@@ -100,11 +100,19 @@ export default function App() {
   const [adminPasswordInput, setAdminPasswordInput] = useState('');
   const [adminSection, setAdminSection] = useState('dashboard');
 
-  const [editingProductId, setEditingProductId] = useState(null);
+    const [editingProductId, setEditingProductId] = useState(null);
   const [productForm, setProductForm] = useState({
-    name: '', regularPrice: '', price: '', category: 'Fashion', subcategory: '',
-    colorsStr: 'Black, Navy Blue', images: [], colorImages: {}, description: '', sizes: 'M, L, XL', stock: 10
+    name: '', 
+    regularPrice: '', 
+    price: '', 
+    category: 'Fashion', 
+    subcategory: '',
+    images: [], 
+    description: '', 
+    sizes: 'M, L, XL', 
+    stock: 10
   });
+
 
   const [newCatName, setNewCatName] = useState('');
   const [newSubCatName, setNewSubCatName] = useState('');
