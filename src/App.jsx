@@ -186,8 +186,7 @@ export default function App() {
   const isInsideDhaka = orderForm.address.toLowerCase().includes('dhaka') || orderForm.address.includes('ঢাকা');
   const deliveryCharge = isInsideDhaka ? 60 : 120;
 
-  // ফায়ারবেস ডাটাবেজে অর্ডার সেভ করার ফাংশন
-  const handleConfirmOrder = async (e) => {
+  // ফায়ারবেস ডাটাবেজে অর্ডার সেভ করার ফাংশন  const handleConfirmOrder = async (e) => {
     e.preventDefault();
     let errors = {};
     if (!orderForm.name.trim()) errors.name = true;
@@ -204,21 +203,18 @@ export default function App() {
     }
 
     const nowTime = new Date().toLocaleString('bn-BD', { hour12: true });
-    const chosenColor = selectedColorForOrder || orderForm.color || '';
-    const finalImg = selectedProduct.colorImages?.[chosenColor] || selectedProduct.images?.[0] || '';
-
     const unitPrice = selectedProduct.price;
     const qty = Number(orderForm.quantity) || 1;
     const totalAmount = (unitPrice * qty) + deliveryCharge;
 
-        const newOrder = {
+    const newOrder = {
       id: "ORD-" + Date.now().toString().slice(-6),
       productName: selectedProduct.name,
-      productImage: selectedProduct.colorImages?.[selectedColorForOrder] || selectedProduct.images?.[0] || '',
+      productImage: orderForm.productImage || selectedProduct.images?.[0] || '',
       productPrice: unitPrice,
       quantity: qty,
       size: orderForm.size,
-      color: chosenColor,
+      color: orderForm.color || '',
       customerMobile: orderForm.mobile,
       customerName: orderForm.name,
       mobile: orderForm.mobile,
@@ -234,9 +230,7 @@ export default function App() {
       confirmedTime: null
     };
 
-
     try {
-      // Firestore Database-এ অর্ডার সেভ করা
       await addDoc(collection(db, "orders"), newOrder);
     } catch (error) {
       console.error("Error saving order to Firestore:", error);
@@ -244,8 +238,9 @@ export default function App() {
 
     setOrders([newOrder, ...orders]);
     setSelectedProduct(null);
-    alert("আপনার অর্ডারটি সফলভাবে গৃহীত হয়েছে! অর্ডার আইডি: " + newOrder.id);
+    alert("আপনার অর্ডারটি সফলভাবে গৃহীত হয়েছে!");
   };
+
 
   const updateOrderStatus = (orderId, newStatus) => {
     const confirmTimeStr = new Date().toLocaleString('bn-BD', { hour12: true });
