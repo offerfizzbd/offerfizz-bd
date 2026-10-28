@@ -931,7 +931,6 @@ export default function App() {
 )}
 
 
-
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
           <button onClick={() => { setActiveTab('home'); setActivePageContent(null); }} className={activeTab === 'home' && !activePageContent ? 'text-purple-700 font-bold' : ''}>🛍️ হোম</button>
           <button onClick={() => { setActiveTab('profile'); setActivePageContent(null); }} className={activeTab === 'profile' && !activePageContent ? 'text-purple-700 font-bold' : ''}>👤 প্রোফাইল</button>
