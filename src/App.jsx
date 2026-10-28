@@ -211,28 +211,29 @@ export default function App() {
     const qty = Number(orderForm.quantity) || 1;
     const totalAmount = (unitPrice * qty) + deliveryCharge;
 
-    const newOrder = {
+        const newOrder = {
       id: "ORD-" + Date.now().toString().slice(-6),
       productName: selectedProduct.name,
-      
+      productImage: selectedProduct.colorImages?.[selectedColorForOrder] || selectedProduct.images?.[0] || '',
       productPrice: unitPrice,
       quantity: qty,
       size: orderForm.size,
       color: chosenColor,
       customerMobile: orderForm.mobile,
-      customerName: orderForm.name, 
-      mobile: orderForm.mobile, 
+      customerName: orderForm.name,
+      mobile: orderForm.mobile,
       address: orderForm.address,
-      deliveryArea: isInsideDhaka ? 'inside' : 'outside', 
-      deliveryCharge, 
+      deliveryArea: isInsideDhaka ? 'inside' : 'outside',
+      deliveryCharge,
       totalAmount,
-      paymentMethod: orderForm.paymentMethod, 
-      trxId: orderForm.trxId || 'N/A', 
-      paymentScreenshot: orderForm.paymentScreenshot || null,
-      status: 'Pending', 
+      paymentMethod: orderForm.paymentMethod,
+      trxId: orderForm.trxId || 'N/A',
+      paymentScreenshot: orderForm.paymentScreenshot || '',
+      status: 'Pending',
       orderTime: nowTime,
       confirmedTime: null
     };
+
 
     try {
       // Firestore Database-এ অর্ডার সেভ করা
