@@ -100,19 +100,11 @@ export default function App() {
   const [adminPasswordInput, setAdminPasswordInput] = useState('');
   const [adminSection, setAdminSection] = useState('dashboard');
 
-    const [editingProductId, setEditingProductId] = useState(null);
+  const [editingProductId, setEditingProductId] = useState(null);
   const [productForm, setProductForm] = useState({
-    name: '', 
-    regularPrice: '', 
-    price: '', 
-    category: 'Fashion', 
-    subcategory: '',
-    images: [], 
-    description: '', 
-    sizes: 'M, L, XL', 
-    stock: 10
+    name: '', regularPrice: '', price: '', category: 'Fashion', subcategory: '',
+    colorsStr: 'Black, Navy Blue', images: [], colorImages: {}, description: '', sizes: 'M, L, XL', stock: 10
   });
-
 
   const [newCatName, setNewCatName] = useState('');
   const [newSubCatName, setNewSubCatName] = useState('');
@@ -222,8 +214,7 @@ export default function App() {
     const newOrder = {
       id: "ORD-" + Date.now().toString().slice(-6),
       productName: selectedProduct.name,
-      productImage: String(orderForm.productImage || (selectedProduct.images && selectedProduct.images.length > 0 ? selectedProduct.images[0] : '')),
-
+      productImage: finalImg,
       productPrice: unitPrice,
       quantity: qty,
       size: orderForm.size,
@@ -770,8 +761,7 @@ export default function App() {
                       ))}
                     </div>
                   </div>
-                )}
-                {/* Categories Management */}
+                )}Categories Management */}
                 {adminSection === 'categories' && (
                   <div className="space-y-4">
                     <div className="bg-white p-3 rounded-xl border space-y-3">
@@ -814,8 +804,7 @@ export default function App() {
                       ))}
                     </div>
                   </div>
-                )}
-                {/* Customers Management */}
+                )}{/* Customers Management */}
                 {adminSection === 'customers' && (
                   <div className="space-y-3">
                     <h3 className="font-bold">কাস্টমার অ্যাকাউন্ট ম্যানেজমেন্ট</h3>
@@ -867,8 +856,7 @@ export default function App() {
                       )}
                     </div>
                   </div>
-                )}
-                {/* Settings */}
+                )}{/* Settings */}
                 {adminSection === 'settings' && (
                   <div className="space-y-4">
                     <div className="bg-white p-3 rounded-xl border space-y-2">
@@ -907,29 +895,99 @@ export default function App() {
               </div>
             )}
           </main>
-        )}
+        )} {/* Order Modal */}
+        {selectedProduct && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 text-xs">
+            <div className="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between font-bold border-b pb-2"><h3 className="text-emerald-700 text-sm">অর্ডার কনফার্ম করুন</h3><button onClick={() => setSelectedProduct(null)} className="text-gray-500">✕</button></div>
+              <form onSubmit={handleConfirmOrder} className="space-y-2">
+                <div><label className="block font-bold mb-1">প্রোডাক্ট:</label><p className="bg-gray-100 p-2 rounded">{selectedProduct.name}</p></div>
+                
+                {selectedProduct.colors && selectedProduct.colors.length > 0 && (
+                  <div>
+                    <label className="block font-bold mb-1">কালার নির্বাচন করুন:</label>
+                    <div className="flex gap-2 flex-wrap">
+                      {selectedProduct.colors.map((clr) => {
+                        const imgUrl = selectedProduct.colorImages?.[clr] || selectedProduct.images?.[0];
+                        const isSelected = selectedColorForOrder === clr;
+                        return (
+                          <div key={clr} onClick={() => setSelectedColorForOrder(clr)} className={`cursor-pointer border-2 rounded-lg p-1 flex items-center gap-1.5 ${isSelected ? 'border-purple-700 bg-purple-50' : 'border-gray-200'}`}>
+                            <img src={imgUrl} alt="" className="w-8 h-8 object-cover rounded" />
+                            <span className="text-[11px] font-bold px-1">{clr}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
-        {/* Order Modal */}
-        {selectedProduct.images && selectedProduct.images.length > 0 && (
-  <div className="mb-2">
-    <label className="block font-bold mb-1">ছবি সিলেক্ট করুন:</label>
-    <div className="flex gap-2 flex-wrap">
-      {selectedProduct.images.map((imgUrl, idx) => {
-        const isSelected = (orderForm.productImage || selectedProduct.images[0]) === imgUrl;
-        return (
-          <div 
-            key={idx} 
-            onClick={() => setOrderForm({ ...orderForm, productImage: String(imgUrl) })} 
-            className={`cursor-pointer border-2 rounded-lg p-1 flex items-center ${isSelected ? 'border-purple-700 bg-purple-50' : 'border-gray-200'}`}
-          >
-            <img src={imgUrl} alt="" className="w-12 h-12 object-cover rounded" />
+                <div>
+                  <label className="block font-bold mb-1">আপনার নাম:</label>
+                  <input type="text" placeholder="আপনার নাম লিখুন" value={orderForm.name} onChange={(e) => setOrderForm({ ...orderForm, name: e.target.value })} className={`w-full border rounded p-2 ${formErrors.name ? 'border-red-500 bg-red-50' : ''}`} />
+                </div>
+                
+                <div>
+                  <label className="block font-bold mb-1">মোবাইল নম্বর:</label>
+                  <input type="tel" placeholder="01XXXXXXXXX" value={orderForm.mobile} onChange={(e) => setOrderForm({ ...orderForm, mobile: e.target.value })} className={`w-full border rounded p-2 ${formErrors.mobile ? 'border-red-500 bg-red-50' : ''}`} />
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1">সম্পূর্ণ ঠিকানা:</label>
+                  <textarea placeholder="আপনার সম্পূর্ণ ঠিকানা লিখুন..." value={orderForm.address} onChange={(e) => setOrderForm({ ...orderForm, address: e.target.value })} className={`w-full border rounded p-2 ${formErrors.address ? 'border-red-500 bg-red-50' : ''}`} rows="2"></textarea>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block font-bold mb-1">সাইজ:</label>
+                    <select value={orderForm.size} onChange={(e) => setOrderForm({ ...orderForm, size: e.target.value })} className="w-full border rounded p-2 bg-white">
+                      {selectedProduct.sizes?.map((sz, idx) => <option key={idx} value={sz}>{sz}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold mb-1">পরিমাণ (পিস):</label>
+                    <input 
+                      type="number" 
+                      min="1" 
+                      value={orderForm.quantity} 
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setOrderForm({ ...orderForm, quantity: val === '' ? '' : Math.max(1, Number(val)) });
+                      }} 
+                      className="w-full border rounded p-2 bg-white" 
+                    />
+                  </div>
+                </div>
+
+                <div
+                  className="bg-gray-100 p-2 rounded-xl border text-[11px] font-semibold text-gray-700">
+                  📍 ডেলিভারি এলাকা: <span className="text-purple-700 font-bold">{isInsideDhaka ? 'ঢাকার ভেতরে (চার্জ: ৳৬০)' : 'ঢাকার বাইরে (চার্জ: ৳১২০)'}</span>
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1">পেমেন্ট পদ্ধতি:</label>
+                  <select value={orderForm.paymentMethod} onChange={(e) => setOrderForm({ ...orderForm, paymentMethod: e.target.value })} className="w-full border rounded p-2 bg-white">
+                    <option value="COD">ক্যাশ অন ডেলিভারি (COD)</option>
+                    <option value="bKash">বিকাশ পার্সোনাল ({settings.bkashNumber})</option>
+                    <option value="Nagad">নগদ পার্সোনাল ({settings.nagadNumber})</option>
+                  </select>
+                </div>
+                {(orderForm.paymentMethod === 'bKash' || orderForm.paymentMethod === 'Nagad') && (
+                  <div className="bg-purple-50 p-2 rounded-xl border space-y-2">
+                    <p className="text-[11px] text-purple-800 font-semibold">টাকা পাঠিয়ে TrxID এবং স্ক্রিনশট দিন:</p>
+                    <input type="text" placeholder="TrxID লিখুন" required value={orderForm.trxId} onChange={(e) => setOrderForm({ ...orderForm, trxId: e.target.value })} className="w-full border rounded p-1.5 bg-white" />
+                    <input type="file" accept="image/*" required onChange={handleScreenshotUpload} className="w-full bg-white border p-1 rounded" />
+                  </div>
+                )}
+
+                <div className="border-2 border-dashed border-emerald-500 bg-emerald-50 p-2 rounded-xl text-center font-bold text-emerald-800">
+                  সর্বমোট: ৳ {(selectedProduct.price * (Number(orderForm.quantity) || 1)) + deliveryCharge} (ডেলিভারি চার্জসহ)
+                </div>
+
+                <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-xl shadow-md">অর্ডার কনফার্ম করুন</button>
+              </form>
+            </div>
           </div>
-        );
-      })}
-    </div>
-  </div>
-)}
-
+        )}
 
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
           <button onClick={() => { setActiveTab('home'); setActivePageContent(null); }} className={activeTab === 'home' && !activePageContent ? 'text-purple-700 font-bold' : ''}>🛍️ হোম</button>
@@ -979,4 +1037,6 @@ export default function App() {
     </div>
   );
 }
-                
+
+                    
+                        
