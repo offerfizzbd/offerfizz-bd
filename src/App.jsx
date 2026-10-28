@@ -910,33 +910,28 @@ export default function App() {
         )}
 
         {/* Order Modal */}
-        {selectedProduct && (
-          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 text-xs">
-            <div className="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between font-bold border-b pb-2"><h3 className="text-emerald-700 text-sm">অর্ডার কনফার্ম করুন</h3><button onClick={() => setSelectedProduct(null)} className="text-gray-500">✕</button></div>
-              <form onSubmit={handleConfirmOrder} className="space-y-2">
-                <div><label className="block font-bold mb-1">প্রোডাক্ট:</label><p className="bg-gray-100 p-2 rounded">{selectedProduct.name}</p></div>
-                
-                {selectedProduct.images && selectedProduct.images.length > 0 && (
+        {selectedProduct.images && selectedProduct.images.length > 0 && (
   <div className="mb-2">
     <label className="block font-bold mb-1">ছবি সিলেক্ট করুন:</label>
     <div className="flex gap-2 flex-wrap">
       {selectedProduct.images.map((imgUrl, idx) => {
-        const isSelected = (orderForm.productImage || selectedProduct.images[0]) === imgUrl;
+        const currentImageStr = String(orderForm.productImage || selectedProduct.images[0] || '');
+        const targetImageStr = String(imgUrl || '');
+        const isSelected = currentImageStr === targetImageStr;
+        
         return (
           <div 
             key={idx} 
-            onClick={() => setOrderForm({ ...orderForm, productImage: String(imgUrl) })} 
+            onClick={() => setOrderForm(prev => ({ ...prev, productImage: targetImageStr }))} 
             className={`cursor-pointer border-2 rounded-lg p-1 flex items-center ${isSelected ? 'border-purple-700 bg-purple-50' : 'border-gray-200'}`}
           >
-            <img src={imgUrl} alt="" className="w-12 h-12 object-cover rounded" />
+            <img src={targetImageStr} alt="" className="w-12 h-12 object-cover rounded" />
           </div>
         );
       })}
     </div>
   </div>
 )}
-
 
                 <div>
                   <label className="block font-bold mb-1">আপনার নাম:</label>
