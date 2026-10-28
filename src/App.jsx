@@ -915,23 +915,21 @@ export default function App() {
     <label className="block font-bold mb-1">ছবি সিলেক্ট করুন:</label>
     <div className="flex gap-2 flex-wrap">
       {selectedProduct.images.map((imgUrl, idx) => {
-        const currentImageStr = String(orderForm.productImage || selectedProduct.images[0] || '');
-        const targetImageStr = String(imgUrl || '');
-        const isSelected = currentImageStr === targetImageStr;
-        
+        const isSelected = (orderForm.productImage || selectedProduct.images[0]) === imgUrl;
         return (
           <div 
             key={idx} 
-            onClick={() => setOrderForm(prev => ({ ...prev, productImage: targetImageStr }))} 
+            onClick={() => setOrderForm({ ...orderForm, productImage: String(imgUrl) })} 
             className={`cursor-pointer border-2 rounded-lg p-1 flex items-center ${isSelected ? 'border-purple-700 bg-purple-50' : 'border-gray-200'}`}
           >
-            <img src={targetImageStr} alt="" className="w-12 h-12 object-cover rounded" />
+            <img src={imgUrl} alt="" className="w-12 h-12 object-cover rounded" />
           </div>
         );
       })}
     </div>
   </div>
 )}
+
 
                 <div>
                   <label className="block font-bold mb-1">আপনার নাম:</label>
