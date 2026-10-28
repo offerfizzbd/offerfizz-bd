@@ -1019,12 +1019,10 @@ export default function App() {
                 }} 
                 className="text-purple-400 font-semibold hover:underline text-left">
                 🔄 রিটার্ন পলিসি
-                              <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-xl shadow-md">অর্ডার কনফার্ম করুন</button>
+                                              <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-xl shadow-md">অর্ডার কনফার্ম করুন</button>
               </form>
             </div>
           </div>
         )}
 
-
-                    
                         
