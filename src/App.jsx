@@ -896,7 +896,7 @@ export default function App() {
               <form onSubmit={handleConfirmOrder} className="space-y-2">
                 <div><label className="block font-bold mb-1">প্রোডাক্ট:</label><p className="bg-gray-100 p-2 rounded">{selectedProduct.name}</p></div>
                 
-                                {selectedProduct.images && selectedProduct.images.length > 0 && (
+                                                {selectedProduct.images && selectedProduct.images.length > 0 && (
                   <div>
                     <label className="block font-bold mb-1">ছবি সিলেক্ট করুন:</label>
                     <div className="flex gap-2 flex-wrap">
@@ -915,6 +915,7 @@ export default function App() {
                     </div>
                   </div>
                 )}
+
 
 
                 <div>
