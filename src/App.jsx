@@ -100,11 +100,12 @@ export default function App() {
   const [adminPasswordInput, setAdminPasswordInput] = useState('');
   const [adminSection, setAdminSection] = useState('dashboard');
 
-  const [editingProductId, setEditingProductId] = useState(null);
+    const [editingProductId, setEditingProductId] = useState(null);
   const [productForm, setProductForm] = useState({
     name: '', regularPrice: '', price: '', category: 'Fashion', subcategory: '',
-    colorsStr: 'Black, Navy Blue', images: [], colorImages: {}, description: '', sizes: 'M, L, XL', stock: 10
+    images: [], description: '', sizes: 'M, L, XL', stock: 10
   });
+
 
   const [newCatName, setNewCatName] = useState('');
   const [newSubCatName, setNewSubCatName] = useState('');
@@ -214,7 +215,8 @@ export default function App() {
     const newOrder = {
       id: "ORD-" + Date.now().toString().slice(-6),
       productName: selectedProduct.name,
-      productImage: finalImg,
+      productImage: orderForm.productImage || selectedProduct.images?.[0] || '',
+      
       productPrice: unitPrice,
       quantity: qty,
       size: orderForm.size,
@@ -273,17 +275,9 @@ export default function App() {
     }
   };
 
-  const handleSaveProduct = (e) => {
+    const handleSaveProduct = (e) => {
     e.preventDefault();
     if (!productForm.name || !productForm.price) return alert("নাম এবং দাম আবশ্যক!");
-
-    const colorsList = productForm.colorsStr ? productForm.colorsStr.split(',').map(c => c.trim()) : [];
-    let colorImgs = productForm.colorImages || {};
-    if (productForm.images.length > 0 && colorsList.length > 0) {
-      colorsList.forEach((clr, idx) => {
-        colorImgs[clr] = productForm.images[idx % productForm.images.length];
-      });
-    }
 
     if (editingProductId) {
       setProducts(products.map(p => p.id === editingProductId ? {
@@ -293,8 +287,6 @@ export default function App() {
         price: Number(productForm.price), 
         category: productForm.category, 
         subcategory: productForm.subcategory || '', 
-        colors: colorsList,
-        colorImages: colorImgs,
         images: productForm.images.length > 0 ? productForm.images : p.images,
         description: productForm.description, 
         sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['Standard'], 
@@ -310,8 +302,6 @@ export default function App() {
         price: Number(productForm.price), 
         category: productForm.category, 
         subcategory: productForm.subcategory || '',
-        colors: colorsList,
-        colorImages: colorImgs,
         images: productForm.images.length > 0 ? productForm.images : ["https://via.placeholder.com/150"],
         description: productForm.description || "প্রিমিয়াম প্রোডাক্ট।", 
         sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['Standard'], 
@@ -320,10 +310,11 @@ export default function App() {
       setProducts(prevProducts => [newProd, ...prevProducts]);
       alert("নতুন প্রোডাক্ট সফলভাবে পোস্ট করা হয়েছে!");
     }
-    setProductForm({ name: '', regularPrice: '', price: '', category: 'Fashion', subcategory: '', colorsStr: 'Black, Navy Blue', images: [], colorImages: {}, description: '', sizes: 'M, L, XL', stock: 10 });
+    setProductForm({ name: '', regularPrice: '', price: '', category: 'Fashion', subcategory: '', images: [], description: '', sizes: 'M, L, XL', stock: 10 });
   };
 
-  const handleEditProductClick = (product) => {
+
+    const handleEditProductClick = (product) => {
     setEditingProductId(product.id);
     setProductForm({
       name: product.name, 
@@ -331,14 +322,13 @@ export default function App() {
       price: product.price,
       category: product.category, 
       subcategory: product.subcategory || '', 
-      colorsStr: product.colors ? product.colors.join(', ') : '',
       images: product.images || [], 
-      colorImages: product.colorImages || {},
       description: product.description,
       sizes: product.sizes ? product.sizes.join(', ') : 'Standard', 
       stock: product.stock
     });
   };
+
 
   const deleteProduct = (id) => {
     if (window.confirm("প্রোডাক্টটি মুছে ফেলতে চান?")) {
@@ -906,23 +896,26 @@ export default function App() {
               <form onSubmit={handleConfirmOrder} className="space-y-2">
                 <div><label className="block font-bold mb-1">প্রোডাক্ট:</label><p className="bg-gray-100 p-2 rounded">{selectedProduct.name}</p></div>
                 
-                {selectedProduct.colors && selectedProduct.colors.length > 0 && (
+                                {selectedProduct.images && selectedProduct.images.length > 0 && (
                   <div>
-                    <label className="block font-bold mb-1">কালার নির্বাচন করুন:</label>
+                    <label className="block font-bold mb-1">ছবি সিলেক্ট করুন:</label>
                     <div className="flex gap-2 flex-wrap">
-                      {selectedProduct.colors.map((clr) => {
-                        const imgUrl = selectedProduct.colorImages?.[clr] || selectedProduct.images?.[0];
-                        const isSelected = selectedColorForOrder === clr;
+                      {selectedProduct.images.map((imgUrl, idx) => {
+                        const isSelected = (orderForm.productImage || selectedProduct.images[0]) === imgUrl;
                         return (
-                          <div key={clr} onClick={() => setSelectedColorForOrder(clr)} className={`cursor-pointer border-2 rounded-lg p-1 flex items-center gap-1.5 ${isSelected ? 'border-purple-700 bg-purple-50' : 'border-gray-200'}`}>
-                            <img src={imgUrl} alt="" className="w-8 h-8 object-cover rounded" />
-                            <span className="text-[11px] font-bold px-1">{clr}</span>
+                          <div 
+                            key={idx} 
+                            onClick={() => setOrderForm({ ...orderForm, productImage: String(imgUrl) })} 
+                            className={`cursor-pointer border-2 rounded-lg p-1 flex items-center ${isSelected ? 'border-purple-700 bg-purple-50' : 'border-gray-200'}`}
+                          >
+                            <img src={imgUrl} alt="" className="w-12 h-12 object-cover rounded" />
                           </div>
                         );
                       })}
                     </div>
                   </div>
                 )}
+
 
                 <div>
                   <label className="block font-bold mb-1">আপনার নাম:</label>
