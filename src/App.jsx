@@ -214,7 +214,7 @@ export default function App() {
     const newOrder = {
       id: "ORD-" + Date.now().toString().slice(-6),
       productName: selectedProduct.name,
-      productImage: String(orderForm.productImage || (selectedProduct.images && selectedProduct.images.length > 0 ? selectedProduct.images[0] : '')),
+      productImage: orderForm.productImage || (selectedProduct.images && selectedProduct.images.length > 0 ? selectedProduct.images[0] : ''),
 
       productPrice: unitPrice,
       quantity: qty,
