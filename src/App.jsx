@@ -886,6 +886,7 @@ export default function App() {
           <p className="bg-gray-100 p-2 rounded">{selectedProduct.name}</p>
         </div>
 
+
       <div className="flex justify-between font-bold border-b pb-2">
         <h3 className="text-purple-800">Confirm order.</h3>
         <button onClick={() => setSelectedProduct(null)} className="text-gray-500 hover:text-red-500">✕</button>
