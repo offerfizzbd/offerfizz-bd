@@ -865,15 +865,16 @@ export default function App() {
     <div className="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 max-h-[90vh] overflow-y-auto">
       
       {/* প্রোডাক্টের ছবি দেখানোর অংশ */}
-      {selectedProduct.images && selectedProduct.images[0] && (
-        <div className="mb-3 flex justify-center">
-          <img 
-            src={selectedProduct.images[0]} 
-            alt={selectedProduct.name} 
-            className="w-20 h-20 object-cover rounded border" 
-          />
-        </div>
-      )}
+{selectedProduct?.images?.[0] && (
+  <div className="mb-3 flex justify-center">
+    <img 
+      src={selectedProduct.images[0]} 
+      alt={selectedProduct.name} 
+      className="w-24 h-24 object-cover rounded-lg border shadow-sm" 
+    />
+  </div>
+)}
+
 
       <div className="flex justify-between font-bold border-b pb-2">
         <h3 className="text-purple-800">Confirm order.</h3>
