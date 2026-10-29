@@ -145,22 +145,20 @@ export default function App() {
     }
   };
 
-  const openOrderModal = (product) => {
+    const openOrderModal = (product) => {
     setSelectedProduct(product);
     setViewProductDetails(null);
-    const defaultColor = product.colors?.[0] || '';
-    setSelectedColorForOrder(defaultColor);
     setOrderForm({
       name: customerUser ? customerUser.name : '',
       mobile: customerUser ? customerUser.mobile : '',
       address: customerUser ? customerUser.address : '',
       size: product.sizes?.[0] || 'Standard',
-      color: defaultColor,
       quantity: 1,
       paymentMethod: 'COD', trxId: '', paymentScreenshot: ''
     });
     setFormErrors({});
   };
+
 
   const isInsideDhaka = orderForm.address.toLowerCase().includes('dhaka') || orderForm.address.includes('ঢাকা');
   const deliveryCharge = isInsideDhaka ? 60 : 120;
