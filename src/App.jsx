@@ -860,13 +860,32 @@ export default function App() {
           </main>
         )}
         {/* Order Modal */}
-        {selectedProduct && (
-          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 text-xs">
-            <div className="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between font-bold border-b pb-2"><h3 className="text-emerald-700 text-sm">অর্ডার কনফার্ম করুন</h3><button onClick={() => setSelectedProduct(null)} className="text-gray-500">✕</button></div>
-              <form onSubmit={handleConfirmOrder} className="space-y-2">
-                <div><label className="block font-bold mb-1">প্রোডাক্ট:</label><p className="bg-gray-100 p-2 rounded">{selectedProduct.name}</p></div>
-                
+{selectedProduct && (
+  <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 overflow-y-auto">
+    <div className="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 max-h-[90vh] overflow-y-auto">
+      
+      {/* প্রোডাক্টের ছবি দেখানোর অংশ */}
+      {selectedProduct.images && selectedProduct.images[0] && (
+        <div className="mb-3 flex justify-center">
+          <img 
+            src={selectedProduct.images[0]} 
+            alt={selectedProduct.name} 
+            className="w-20 h-20 object-cover rounded border" 
+          />
+        </div>
+      )}
+
+      <div className="flex justify-between font-bold border-b pb-2">
+        <h3 className="text-purple-800">Confirm order.</h3>
+        <button onClick={() => setSelectedProduct(null)} className="text-gray-500 hover:text-red-500">✕</button>
+      </div>
+
+      <form onSubmit={handleConfirmOrder} className="space-y-3">
+        <div>
+          <label className="block font-bold mb-1">Product:</label>
+          <p className="bg-gray-100 p-2 rounded">{selectedProduct.name}</p>
+        </div>
+
                                                 {selectedProduct && selectedProduct.images && selectedProduct.images[0] && (
   <div className="mb-3 flex justify-center">
     <img 
