@@ -708,11 +708,6 @@ export default function App() {
                       </div>
 
                       <div>
-                        <label className="block font-bold text-gray-600 mb-1">কালারসমূহ (কমা দিয়ে লিখুন, যেমন: Black, Blue, Red):</label>
-                        <input type="text" placeholder="Black, Navy Blue" value={productForm.colorsStr} onChange={(e) => setProductForm({ ...productForm, colorsStr: e.target.value })} className="border p-2 rounded w-full" />
-                      </div>
-
-                      <div>
                         <label className="block font-bold text-gray-600 mb-1">প্রোডাক্ট ছবি নির্বাচন করুন:</label>
                         {editingProductId && productForm.images.length > 0 && (
                           <div className="flex gap-2 mb-2">
