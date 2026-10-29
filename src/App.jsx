@@ -906,11 +906,7 @@ export default function App() {
     />
   </div>
 )}
-
-                )}
-
-
-
+)}
                 <div>
                   <label className="block font-bold mb-1">আপনার নাম:</label>
                   <input type="text" placeholder="আপনার নাম লিখুন" value={orderForm.name} onChange={(e) => setOrderForm({ ...orderForm, name: e.target.value })} className={`w-full border rounded p-2 ${formErrors.name ? 'border-red-500 bg-red-50' : ''}`} />
