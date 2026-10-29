@@ -867,24 +867,16 @@ export default function App() {
               <form onSubmit={handleConfirmOrder} className="space-y-2">
                 <div><label className="block font-bold mb-1">প্রোডাক্ট:</label><p className="bg-gray-100 p-2 rounded">{selectedProduct.name}</p></div>
                 
-                                                {selectedProduct.images && selectedProduct.images.length > 0 && (
-                  <div>
-                    <label className="block font-bold mb-1">ছবি সিলেক্ট করুন:</label>
-                    <div className="flex gap-2 flex-wrap">
-                      {selectedProduct.images.map((imgUrl, idx) => {
-                        const isSelected = (orderForm.productImage || selectedProduct.images[0]) === imgUrl;
-                        return (
-                          <div 
-                            key={idx} 
-                            onClick={() => setOrderForm({ ...orderForm, productImage: String(imgUrl) })} 
-                            className={`cursor-pointer border-2 rounded-lg p-1 flex items-center ${isSelected ? 'border-purple-700 bg-purple-50' : 'border-gray-200'}`}
-                          >
-                            <img src={imgUrl} alt="" className="w-12 h-12 object-cover rounded" />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                                                {selectedProduct && selectedProduct.images && selectedProduct.images[0] && (
+  <div className="mb-3 flex justify-center">
+    <img 
+      src={selectedProduct.images[0]} 
+      alt={selectedProduct.name} 
+      className="w-16 h-16 object-cover rounded border" 
+    />
+  </div>
+)}
+
                 )}
 
 
