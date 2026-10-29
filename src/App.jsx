@@ -864,17 +864,27 @@ export default function App() {
   <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 overflow-y-auto">
     <div className="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 max-h-[90vh] overflow-y-auto">
       
-      {/* প্রোডাক্টের ছবি দেখানোর অংশ */}
-{selectedProduct?.images?.[0] && (
-  <div className="mb-3 flex justify-center">
-    <img 
-      src={selectedProduct.images[0]} 
-      alt={selectedProduct.name} 
-      className="w-24 h-24 object-cover rounded-lg border shadow-sm" 
-    />
-  </div>
-)}
+      <div className="flex justify-between font-bold border-b pb-2">
+        <h3 className="text-purple-800">Confirm order.</h3>
+        <button onClick={() => setSelectedProduct(null)} className="text-gray-500 hover:text-red-500">✕</button>
+      </div>
 
+      {/* প্রোডাক্টের ছবি */}
+      {selectedProduct?.images?.[0] && (
+        <div className="flex justify-center my-2">
+          <img 
+            src={selectedProduct.images[0]} 
+            alt={selectedProduct.name} 
+            className="w-24 h-24 object-cover rounded-lg border shadow-sm" 
+          />
+        </div>
+      )}
+
+      <form onSubmit={handleConfirmOrder} className="space-y-3">
+        <div>
+          <label className="block font-bold mb-1">Product:</label>
+          <p className="bg-gray-100 p-2 rounded">{selectedProduct.name}</p>
+        </div>
 
       <div className="flex justify-between font-bold border-b pb-2">
         <h3 className="text-purple-800">Confirm order.</h3>
