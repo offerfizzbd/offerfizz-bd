@@ -898,82 +898,78 @@ export default function App() {
           <p className="bg-gray-100 p-2 rounded">{selectedProduct.name}</p>
         </div>
 
-                                                {selectedProduct && selectedProduct.images && selectedProduct.images[0] && (
-  <div className="mb-3 flex justify-center">
-    <img 
-      src={selectedProduct.images[0]} 
-      alt={selectedProduct.name} 
-      className="w-16 h-16 object-cover rounded border" 
-    />
+{/* Order Modal */}
+{selectedProduct && (
+  <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 overflow-y-auto">
+    <div className="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 max-h-[90vh] overflow-y-auto">
+      
+      {/* মোডালের হেডার */}
+      <div className="flex justify-between font-bold border-b pb-2">
+        <h3 className="text-purple-800">Confirm order.</h3>
+        <button onClick={() => setSelectedProduct(null)} className="text-gray-500 hover:text-red-500">✕</button>
+      </div>
+
+      {/* প্রোডাক্টের ছবি */}
+      {selectedProduct?.images?.[0] && (
+        <div className="flex justify-center my-2">
+          <img 
+            src={selectedProduct.images[0]} 
+            alt={selectedProduct.name} 
+            className="w-24 h-24 object-cover rounded-lg border shadow-sm" 
+          />
+        </div>
+      )}
+
+      {/* অর্ডার ফর্ম */}
+      <form onSubmit={handleConfirmOrder} className="space-y-3">
+        <div>
+          <label className="block font-bold mb-1">Product:</label>
+          <p className="bg-gray-100 p-2 rounded">{selectedProduct.name}</p>
+        </div>
+
+        <div>
+          <label className="block font-bold mb-1">Your name:</label>
+          <input 
+            type="text" 
+            placeholder="আপনার নাম লিখুন" 
+            value={orderForm.name} 
+            onChange={(e) => setOrderForm({...orderForm, name: e.target.value})} 
+            className="w-full border p-2 rounded"
+            required 
+          />
+        </div>
+
+        <div>
+          <label className="block font-bold mb-1">Mobile number:</label>
+          <input 
+            type="tel" 
+            placeholder="01XXXXXXXXX" 
+            value={orderForm.mobile} 
+            onChange={(e) => setOrderForm({...orderForm, mobile: e.target.value})} 
+            className="w-full border p-2 rounded"
+            required 
+          />
+        </div>
+
+        <div>
+          <label className="block font-bold mb-1">Full address:</label>
+          <textarea 
+            placeholder="আপনার সম্পূর্ণ ঠিকানা লিখুন..." 
+            value={orderForm.address} 
+            onChange={(e) => setOrderForm({...orderForm, address: e.target.value})} 
+            className="w-full border p-2 rounded"
+            required 
+          />
+        </div>
+
+        <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-2 rounded-lg">
+          Confirm order.
+        </button>
+      </form>
+    </div>
   </div>
 )}
-)}
-                <div>
-                  <label className="block font-bold mb-1">আপনার নাম:</label>
-                  <input type="text" placeholder="আপনার নাম লিখুন" value={orderForm.name} onChange={(e) => setOrderForm({ ...orderForm, name: e.target.value })} className={`w-full border rounded p-2 ${formErrors.name ? 'border-red-500 bg-red-50' : ''}`} />
-                </div>
-                
-                <div>
-                  <label className="block font-bold mb-1">মোবাইল নম্বর:</label>
-                  <input type="tel" placeholder="01XXXXXXXXX" value={orderForm.mobile} onChange={(e) => setOrderForm({ ...orderForm, mobile: e.target.value })} className={`w-full border rounded p-2 ${formErrors.mobile ? 'border-red-500 bg-red-50' : ''}`} />
-                </div>
 
-                <div>
-                  <label className="block font-bold mb-1">সম্পূর্ণ ঠিকানা:</label>
-                  <textarea placeholder="আপনার সম্পূর্ণ ঠিকানা লিখুন..." value={orderForm.address} onChange={(e) => setOrderForm({ ...orderForm, address: e.target.value })} className={`w-full border rounded p-2 ${formErrors.address ? 'border-red-500 bg-red-50' : ''}`} rows="2"></textarea>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block font-bold mb-1">সাইজ:</label>
-                    <select value={orderForm.size} onChange={(e) => setOrderForm({ ...orderForm, size: e.target.value })} className="w-full border rounded p-2 bg-white">
-                      {selectedProduct.sizes?.map((sz, idx) => <option key={idx} value={sz}>{sz}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block font-bold mb-1">পরিমাণ (পিস):</label>
-                    <input 
-                      type="number" 
-                      min="1" 
-                      value={orderForm.quantity} 
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setOrderForm({ ...orderForm, quantity: val === '' ? '' : Math.max(1, Number(val)) });
-                      }} 
-                      className="w-full border rounded p-2 bg-white" 
-                    />
-                  </div>
-                </div>
-
-                <div className="bg-gray-100 p-2 rounded-xl border text-[11px] font-semibold text-gray-700">
-                  📍 ডেলিভারি এলাকা: <span className="text-purple-700 font-bold">{isInsideDhaka ? 'ঢাকার ভেতরে (চার্জ: ৳৬০)' : 'ঢাকার বাইরে (চার্জ: ৳১২০)'}</span>
-                </div>
-
-                <div>
-                  <label className="block font-bold mb-1">পেমেন্ট পদ্ধতি:</label>
-                  <select value={orderForm.paymentMethod} onChange={(e) => setOrderForm({ ...orderForm, paymentMethod: e.target.value })} className="w-full border rounded p-2 bg-white">
-                    <option value="COD">ক্যাশ অন ডেলিভারি (COD)</option>
-                    <option value="bKash">বিকাশ পার্সোনাল ({settings.bkashNumber})</option>
-                    <option value="Nagad">নগদ পার্সোনাল ({settings.nagadNumber})</option>
-                  </select>
-                </div>
-                {(orderForm.paymentMethod === 'bKash' || orderForm.paymentMethod === 'Nagad') && (
-                  <div className="bg-purple-50 p-2 rounded-xl border space-y-2">
-                    <p className="text-[11px] text-purple-800 font-semibold">টাকা পাঠিয়ে TrxID এবং স্ক্রিনশট দিন:</p>
-                    <input type="text" placeholder="TrxID লিখুন" required value={orderForm.trxId} onChange={(e) => setOrderForm({ ...orderForm, trxId: e.target.value })} className="w-full border rounded p-1.5 bg-white" />
-                    <input type="file" accept="image/*" required onChange={handleScreenshotUpload} className="w-full bg-white border p-1 rounded" />
-                  </div>
-                )}
-
-                <div className="border-2 border-dashed border-emerald-500 bg-emerald-50 p-2 rounded-xl text-center font-bold text-emerald-800">
-                  সর্বমোট: ৳ {(selectedProduct.price * (Number(orderForm.quantity) || 1)) + deliveryCharge} (ডেলিভারি চার্জসহ)
-                </div>
-
-                <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-xl shadow-md">অর্ডার কনফার্ম করুন</button>
-              </form>
-            </div>
-          </div>
-        )}
 
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
           <button onClick={() => { setActiveTab('home'); setActivePageContent(null); }} className={activeTab === 'home' && !activePageContent ? 'text-purple-700 font-bold' : ''}>🛍️ হোম</button>
