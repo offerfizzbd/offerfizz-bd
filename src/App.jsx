@@ -898,77 +898,76 @@ export default function App() {
           <p className="bg-gray-100 p-2 rounded">{selectedProduct.name}</p>
         </div>
 
-{/* Order Modal */}
-{selectedProduct && (
-  <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 overflow-y-auto">
-    <div className="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 max-h-[90vh] overflow-y-auto">
-      
-      {/* মোডালের হেডার */}
-      <div className="flex justify-between font-bold border-b pb-2">
-        <h3 className="text-purple-800">Confirm order.</h3>
-        <button onClick={() => setSelectedProduct(null)} className="text-gray-500 hover:text-red-500">✕</button>
-      </div>
+      {/* Order Modal */}
+      {selectedProduct && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 max-h-[90vh] overflow-y-auto">
+            
+            <div className="flex justify-between font-bold border-b pb-2">
+              <h3 className="text-purple-800">Confirm order.</h3>
+              <button onClick={() => setSelectedProduct(null)} className="text-gray-500 hover:text-red-500">✕</button>
+            </div>
 
-      {/* প্রোডাক্টের ছবি */}
-      {selectedProduct?.images?.[0] && (
-        <div className="flex justify-center my-2">
-          <img 
-            src={selectedProduct.images[0]} 
-            alt={selectedProduct.name} 
-            className="w-24 h-24 object-cover rounded-lg border shadow-sm" 
-          />
+            {/* প্রোডাক্টের ছবি */}
+            {selectedProduct?.images?.[0] && (
+              <div className="flex justify-center my-2">
+                <img 
+                  src={selectedProduct.images[0]} 
+                  alt={selectedProduct.name} 
+                  className="w-24 h-24 object-cover rounded-lg border shadow-sm" 
+                />
+              </div>
+            )}
+
+            <form onSubmit={handleConfirmOrder} className="space-y-3">
+              <div>
+                <label className="block font-bold mb-1">Product:</label>
+                <p className="bg-gray-100 p-2 rounded">{selectedProduct.name}</p>
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1">Your name:</label>
+                <input 
+                  type="text" 
+                  placeholder="আপনার নাম লিখুন" 
+                  value={orderForm.name} 
+                  onChange={(e) => setOrderForm({...orderForm, name: e.target.value})} 
+                  className="w-full border p-2 rounded"
+                  required 
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1">Mobile number:</label>
+                <input 
+                  type="tel" 
+                  placeholder="01XXXXXXXXX" 
+                  value={orderForm.mobile} 
+                  onChange={(e) => setOrderForm({...orderForm, mobile: e.target.value})} 
+                  className="w-full border p-2 rounded"
+                  required 
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1">Full address:</label>
+                <textarea 
+                  placeholder="আপনার সম্পূর্ণ ঠিকানা লিখুন..." 
+                  value={orderForm.address} 
+                  onChange={(e) => setOrderForm({...orderForm, address: e.target.value})} 
+                  className="w-full border p-2 rounded"
+                  required 
+                />
+              </div>
+
+              <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-2 rounded-lg">
+                Confirm order.
+              </button>
+            </form>
+          </div>
         </div>
       )}
 
-      {/* অর্ডার ফর্ম */}
-      <form onSubmit={handleConfirmOrder} className="space-y-3">
-        <div>
-          <label className="block font-bold mb-1">Product:</label>
-          <p className="bg-gray-100 p-2 rounded">{selectedProduct.name}</p>
-        </div>
-
-        <div>
-          <label className="block font-bold mb-1">Your name:</label>
-          <input 
-            type="text" 
-            placeholder="আপনার নাম লিখুন" 
-            value={orderForm.name} 
-            onChange={(e) => setOrderForm({...orderForm, name: e.target.value})} 
-            className="w-full border p-2 rounded"
-            required 
-          />
-        </div>
-
-        <div>
-          <label className="block font-bold mb-1">Mobile number:</label>
-          <input 
-            type="tel" 
-            placeholder="01XXXXXXXXX" 
-            value={orderForm.mobile} 
-            onChange={(e) => setOrderForm({...orderForm, mobile: e.target.value})} 
-            className="w-full border p-2 rounded"
-            required 
-          />
-        </div>
-
-        <div>
-          <label className="block font-bold mb-1">Full address:</label>
-          <textarea 
-            placeholder="আপনার সম্পূর্ণ ঠিকানা লিখুন..." 
-            value={orderForm.address} 
-            onChange={(e) => setOrderForm({...orderForm, address: e.target.value})} 
-            className="w-full border p-2 rounded"
-            required 
-          />
-        </div>
-
-        <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-2 rounded-lg">
-          Confirm order.
-        </button>
-      </form>
-    </div>
-  </div>
-)}
 
 
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
