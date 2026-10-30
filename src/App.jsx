@@ -969,7 +969,8 @@ export default function App() {
         </div>
         <p className="text-center text-gray-500">© {new Date().getFullYear()} {settings.storeName}. সর্বস্বত্ব সংরক্ষিত।</p>
       </footer>
-    </div>
+     </div>
   );
+}
                                                                                                                                                                                                               }
               
