@@ -8,14 +8,10 @@ const INITIAL_PRODUCTS = [
     price: 1300,
     category: "Fashion",
     subcategory: "Men",
-    colors: ["Black", "Navy Blue", "Olive"],
-    colorImages: {
-      "Black": "https://images.unsplash.com/photo-1544441893-675973e31985?w=500&q=80",
-      "Navy Blue": "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&q=80",
-      "Olive": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80"
-    },
     images: [
-      "https://images.unsplash.com/photo-1544441893-675973e31985?w=500&q=80"
+      "https://images.unsplash.com/photo-1544441893-675973e31985?w=500&q=80",
+      "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&q=80",
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80"
     ],
     description: "🔥 Exclusive European Style Winter Jacket\n✨ Stylish and comfortable for winter\n📏 Size Chart: M, L, XL",
     sizes: ["M", "L", "XL"],
@@ -47,7 +43,6 @@ const INITIAL_CATEGORIES = [
   { name: 'Electronics', subcategories: ['Home Appliance'] },
   { name: 'Beauty', subcategories: ['Skincare'] }
 ];
-
 export default function App() {
   const [products, setProducts] = useState(() => JSON.parse(localStorage.getItem('offerfizz_products')) || INITIAL_PRODUCTS);
   const [orders, setOrders] = useState(() => JSON.parse(localStorage.getItem('offerfizz_orders')) || []);
@@ -64,14 +59,14 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [viewProductDetails, setViewProductDetails] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [selectedColorForOrder, setSelectedColorForOrder] = useState('');
+  const [selectedImageForOrder, setSelectedImageForOrder] = useState('');
 
   const [customerUser, setCustomerUser] = useState(() => JSON.parse(localStorage.getItem('offerfizz_customer_logged')) || null);
   const [customerAuthForm, setCustomerAuthForm] = useState({ name: '', mobile: '', address: '', password: '' });
   const [isCustomerAuthMode, setIsCustomerAuthMode] = useState('login');
 
   const [orderForm, setOrderForm] = useState({
-    name: '', mobile: '', address: '', size: '', color: '', quantity: 1,
+    name: '', mobile: '', address: '', size: '', quantity: 1,
     paymentMethod: 'COD', trxId: '', paymentScreenshot: ''
   });
   const [formErrors, setFormErrors] = useState({});
@@ -84,7 +79,7 @@ export default function App() {
   const [editingProductId, setEditingProductId] = useState(null);
   const [productForm, setProductForm] = useState({
     name: '', regularPrice: '', price: '', category: 'Fashion', subcategory: '',
-    colorsStr: 'Black, Navy Blue', images: [], colorImages: {}, description: '', sizes: 'M, L, XL', stock: 10
+    images: [], description: '', sizes: 'M, L, XL', stock: 10
   });
 
   const [newCatName, setNewCatName] = useState('');
@@ -147,14 +142,13 @@ export default function App() {
   const openOrderModal = (product) => {
     setSelectedProduct(product);
     setViewProductDetails(null);
-    const defaultColor = product.colors?.[0] || '';
-    setSelectedColorForOrder(defaultColor);
+    const defaultImg = product.images?.[0] || '';
+    setSelectedImageForOrder(defaultImg);
     setOrderForm({
       name: customerUser ? customerUser.name : '',
       mobile: customerUser ? customerUser.mobile : '',
       address: customerUser ? customerUser.address : '',
       size: product.sizes?.[0] || 'Standard',
-      color: defaultColor,
       quantity: 1,
       paymentMethod: 'COD', trxId: '', paymentScreenshot: ''
     });
@@ -181,8 +175,7 @@ export default function App() {
     }
 
     const nowTime = new Date().toLocaleString('bn-BD', { hour12: true });
-    const chosenColor = selectedColorForOrder || orderForm.color || '';
-    const finalImg = selectedProduct.colorImages?.[chosenColor] || selectedProduct.images?.[0] || '';
+    const finalImg = selectedImageForOrder || selectedProduct.images?.[0] || '';
 
     const unitPrice = selectedProduct.price;
     const qty = Number(orderForm.quantity) || 1;
@@ -195,7 +188,6 @@ export default function App() {
       productPrice: unitPrice,
       quantity: qty,
       size: orderForm.size,
-      color: chosenColor,
       customerMobile: orderForm.mobile,
       customerName: orderForm.name, 
       mobile: orderForm.mobile, 
@@ -247,14 +239,6 @@ export default function App() {
     e.preventDefault();
     if (!productForm.name || !productForm.price) return alert("নাম এবং দাম আবশ্যক!");
 
-    const colorsList = productForm.colorsStr ? productForm.colorsStr.split(',').map(c => c.trim()) : [];
-    let colorImgs = productForm.colorImages || {};
-    if (productForm.images.length > 0 && colorsList.length > 0) {
-      colorsList.forEach((clr, idx) => {
-        colorImgs[clr] = productForm.images[idx % productForm.images.length];
-      });
-    }
-
     if (editingProductId) {
       setProducts(products.map(p => p.id === editingProductId ? {
         ...p, 
@@ -263,8 +247,6 @@ export default function App() {
         price: Number(productForm.price), 
         category: productForm.category, 
         subcategory: productForm.subcategory || '', 
-        colors: colorsList,
-        colorImages: colorImgs,
         images: productForm.images.length > 0 ? productForm.images : p.images,
         description: productForm.description, 
         sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['Standard'], 
@@ -280,8 +262,6 @@ export default function App() {
         price: Number(productForm.price), 
         category: productForm.category, 
         subcategory: productForm.subcategory || '',
-        colors: colorsList,
-        colorImages: colorImgs,
         images: productForm.images.length > 0 ? productForm.images : ["https://via.placeholder.com/150"],
         description: productForm.description || "প্রিমিয়াম প্রোডাক্ট।", 
         sizes: productForm.sizes ? productForm.sizes.split(',').map(s => s.trim()) : ['Standard'], 
@@ -289,7 +269,7 @@ export default function App() {
       }, ...products]);
       alert("নতুন প্রোডাক্ট যুক্ত হয়েছে!");
     }
-    setProductForm({ name: '', regularPrice: '', price: '', category: 'Fashion', subcategory: '', colorsStr: 'Black, Navy Blue', images: [], colorImages: {}, description: '', sizes: 'M, L, XL', stock: 10 });
+    setProductForm({ name: '', regularPrice: '', price: '', category: 'Fashion', subcategory: '', images: [], description: '', sizes: 'M, L, XL', stock: 10 });
   };
 
   const handleEditProductClick = (product) => {
@@ -300,9 +280,7 @@ export default function App() {
       price: product.price,
       category: product.category, 
       subcategory: product.subcategory || '', 
-      colorsStr: product.colors ? product.colors.join(', ') : '',
       images: product.images || [], 
-      colorImages: product.colorImages || {},
       description: product.description,
       sizes: product.sizes ? product.sizes.join(', ') : 'Standard', 
       stock: product.stock
@@ -414,8 +392,7 @@ export default function App() {
       setCustomPages(customPages.filter(p => p.id !== id));
     }
   };
-
-  return (
+      return (
     <div className="min-h-screen bg-gray-50 text-gray-800 pb-20 flex flex-col justify-between">
       <div>
         <header className="bg-white shadow-sm border-b sticky top-0 z-20 px-4 py-3 flex items-center justify-between">
@@ -500,7 +477,7 @@ export default function App() {
             </div>
           </main>
         )}
-            {/* Product Details Modal */}
+                         {/* Product Details Modal */}
         {viewProductDetails && (
           <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 text-xs">
             <div className="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 max-h-[90vh] overflow-y-auto">
@@ -589,7 +566,7 @@ export default function App() {
             )}
           </main>
         )}
-        {/* Admin Tab */}
+                          {/* Admin Tab */}
         {activeTab === 'admin' && !activePageContent && (
           <main className="p-4 max-w-2xl mx-auto text-xs">
             {!isAdminLoggedIn ? (
@@ -637,7 +614,7 @@ export default function App() {
                           <div className="flex gap-2 items-center">
                             {ord.productImage && <img src={ord.productImage} alt="" className="w-12 h-12 object-cover rounded border" />}
                             <div>
-                              <p><strong>প্রোডাক্ট:</strong> {ord.productName} {ord.color && `(${ord.color})`} ({ord.size}) - পিস: {ord.quantity || 1}</p>
+                              <p><strong>প্রোডাক্ট:</strong> {ord.productName} ({ord.size}) - পিস: {ord.quantity || 1}</p>
                               <p><strong>কাস্টমার:</strong> {ord.customerName} ({ord.mobile})</p>
                             </div>
                           </div>
@@ -651,7 +628,8 @@ export default function App() {
                     )}
                   </div>
                 )}
-                                {/* Products & Editing */}
+
+                {/* Products & Editing */}
                 {adminSection === 'products' && (
                   <div className="space-y-4">
                     <form onSubmit={handleSaveProduct} className="bg-white p-3.5 rounded-xl border space-y-2">
@@ -685,12 +663,7 @@ export default function App() {
                       </div>
 
                       <div>
-                        <label className="block font-bold text-gray-600 mb-1">কালারসমূহ (কমা দিয়ে লিখুন, যেমন: Black, Blue, Red):</label>
-                        <input type="text" placeholder="Black, Navy Blue" value={productForm.colorsStr} onChange={(e) => setProductForm({ ...productForm, colorsStr: e.target.value })} className="border p-2 rounded w-full" />
-                      </div>
-
-                      <div>
-                        <label className="block font-bold text-gray-600 mb-1">প্রোডাক্ট ছবি নির্বাচন করুন (একাধিক ছবি দিলে প্রতিটি কালারের সাথে ম্যাচ হবে):</label>
+                        <label className="block font-bold text-gray-600 mb-1">প্রোডাক্ট ছবি নির্বাচন করুন (যতগুলো ছবি দেবেন, অর্ডার করার সময় ঠিক ততগুলোই অপশন দেখাবে):</label>
                         {editingProductId && productForm.images.length > 0 && (
                           <div className="flex gap-2 mb-2">
                             {productForm.images.map((img, idx) => (
@@ -728,7 +701,8 @@ export default function App() {
                     </div>
                   </div>
                 )}
-                              {/* Categories & Subcategories Management */}
+
+                {/* Categories & Subcategories Management */}
                 {adminSection === 'categories' && (
                   <div className="space-y-4">
                     <div className="bg-white p-3 rounded-xl border space-y-3">
@@ -826,8 +800,8 @@ export default function App() {
                     </div>
                   </div>
                 )}
-                                                                        
-                    {/* Settings & Footer Info */}
+
+                {/* Settings & Footer Info */}
                 {adminSection === 'settings' && (
                   <div className="space-y-4">
                     <div className="bg-white p-3 rounded-xl border space-y-2">
@@ -868,7 +842,7 @@ export default function App() {
             )}
           </main>
         )}
-                    {/* Order Modal */}
+                {/* Order Modal */}
         {selectedProduct && (
           <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 text-xs">
             <div className="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 max-h-[90vh] overflow-y-auto">
@@ -876,17 +850,15 @@ export default function App() {
               <form onSubmit={handleConfirmOrder} className="space-y-2">
                 <div><label className="block font-bold mb-1">প্রোডাক্ট:</label><p className="bg-gray-100 p-2 rounded">{selectedProduct.name}</p></div>
                 
-                {selectedProduct.colors && selectedProduct.colors.length > 0 && (
+                {selectedProduct.images && selectedProduct.images.length > 0 && (
                   <div>
-                    <label className="block font-bold mb-1">কালার নির্বাচন করুন:</label>
+                    <label className="block font-bold mb-1">ছবি নির্বাচন করুন:</label>
                     <div className="flex gap-2 flex-wrap">
-                      {selectedProduct.colors.map((clr) => {
-                        const imgUrl = selectedProduct.colorImages?.[clr] || selectedProduct.images?.[0];
-                        const isSelected = selectedColorForOrder === clr;
+                      {selectedProduct.images.map((imgUrl, idx) => {
+                        const isSelected = selectedImageForOrder === imgUrl;
                         return (
-                          <div key={clr} onClick={() => setSelectedColorForOrder(clr)} className={`cursor-pointer border-2 rounded-lg p-1 flex items-center gap-1.5 ${isSelected ? 'border-purple-700 bg-purple-50' : 'border-gray-200'}`}>
-                            <img src={imgUrl} alt="" className="w-8 h-8 object-cover rounded" />
-                            <span className="text-[11px] font-bold px-1">{clr}</span>
+                          <div key={idx} onClick={() => setSelectedImageForOrder(imgUrl)} className={`cursor-pointer border-2 rounded-lg p-1 flex items-center gap-1.5 ${isSelected ? 'border-purple-700 bg-purple-50' : 'border-gray-200'}`}>
+                            <img src={imgUrl} alt="" className="w-10 h-10 object-cover rounded" />
                           </div>
                         );
                       })}
@@ -953,13 +925,13 @@ export default function App() {
           </div>
         )}
 
-          <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
           <button onClick={() => { setActiveTab('home'); setActivePageContent(null); }} className={activeTab === 'home' && !activePageContent ? 'text-purple-700 font-bold' : ''}>🛍️ হোম</button>
           <button onClick={() => { setActiveTab('profile'); setActivePageContent(null); }} className={activeTab === 'profile' && !activePageContent ? 'text-purple-700 font-bold' : ''}>👤 প্রোফাইল</button>
         </div>
       </div>
 
-      {/* Footer with separate Delivery & Return Policy Clickable Links */}
+      {/* Footer */}
       <footer className="bg-gray-900 text-gray-300 p-6 mt-8 text-xs space-y-4">
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-gray-800 pb-4">
           <div>
@@ -999,5 +971,5 @@ export default function App() {
       </footer>
     </div>
   );
- }
-            
+                                                                                                                                                                                                              }
+              
