@@ -663,13 +663,10 @@ export default function App() {
                       </div>
 
                       <div>
-                        <label className="block font-bold text-gray-600 mb-1">প্রোডাক্ট ছবি নির্বাচন করুন (যতগুলো ছবি দেবেন, অর্ডার করার সময় ঠিক ততগুলোই অপশন দেখাবে):</label>
-                        {editingProductId && productForm.images.length > 0 && (
-                          <div className="flex gap-2 mb-2">
-                            {productForm.images.map((img, idx) => (
-                              <img key={idx} src={img} alt="" className="w-12 h-12 object-cover rounded border" />
-                            ))}
-                          </div>
+  <label className="block font-bold text-gray-600 mb-1">Colors (enter with commas, e.g. Black, Blue, Red):</label>
+  <input type="text" placeholder="Black, Navy Blue" value={productForm.colorsStr} onChange={(e) => setProductForm({ ...productForm, colorsStr: e.target.value })} className="border p-2 rounded w-full" />
+</div>
+
                         )}
                         <input type="file" accept="image/*" multiple onChange={handleMultipleImagesUpload} className="border p-1.5 rounded w-full bg-gray-50" />
                       </div>
