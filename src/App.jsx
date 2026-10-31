@@ -689,20 +689,126 @@ export default function App() {
                             <div>
                               <p className="font-bold line-clamp-1">{p.name}</p>
                               <div className="flex items-baseline gap-2">
-                                <span className="text-purple-700 font-bold">৳{p.price}</span>
-                                {p.regularPrice > p.price && <span className="text-[10px] text-gray-400 line-through">৳{p.regularPrice}</span>}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex gap-1">
-                            <button onClick={() => handleEditProductClick(p)} className="bg-blue-50 text-blue-600 font-bold px-2 py-1 rounded">✏️ Edit</button>
-                            <button onClick={() => deleteProduct(p.id)} className="bg-red-50 text-red-500 font-bold px-2 py-1 rounded">✕</button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+{/* Products & Editing */}
+{adminSection === 'products' && (
+  <div className="space-y-4">
+    <form onSubmit={handleSaveProduct} className="bg-white p-3.5 rounded-xl border space-y-2">
+      <h3 className="font-bold border-b pb-1 text-purple-800">{editingProductId ? "✏️ প্রোডাক্ট এডিট করুন" : "➕ নতুন প্রোডাক্ট যুক্ত করুন (পোস্ট করুন)"}</h3>
+      <input type="text" placeholder="প্রোডাক্ট নাম" value={productForm.name} onChange={(e) => setProductForm({ ...productForm, name: e.target.value })} className="border p-2 rounded w-full" required />
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="block text-[11px] font-semibold text-gray-500 mb-1">আগের দাম (Regular Price):</label>
+          <input type="number" placeholder="আগের দাম (৳)" value={productForm.regularPrice} onChange={(e) => setProductForm({ ...productForm, regularPrice: e.target.value })} className="border p-2 rounded w-full" />
+        </div>
+        <div>
+          <label className="block text-[11px] font-semibold text-gray-500 mb-1">অফার দাম (Offer Price):</label>
+          <input type="number" placeholder="অফার দাম (৳)" value={productForm.price} onChange={(e) => setProductForm({ ...productForm, price: e.target.value })} className="border p-2 rounded w-full" required />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="block font-semibold mb-1">ক্যাটাগরি:</label>
+          <select value={productForm.category} onChange={(e) => setProductForm({ ...productForm, category: e.target.value, subcategory: '' })} className="w-full border p-2 rounded bg-white">
+            {categories.filter(c => c.name !== 'All').map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block font-semibold mb-1">সাব-ক্যাটাগরি:</label>
+          <select value={productForm.subcategory} onChange={(e) => setProductForm({ ...productForm, subcategory: e.target.value })} className="w-full border p-2 rounded bg-white">
+            <option value="">-- সিলেক্ট করুন --</option>
+            {categories.find(c => c.name === productForm.category)?.subcategories?.map(sub => <option key={sub} value={sub}>{sub}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="block font-bold text-gray-600 mb-1">প্রোডাক্ট ছবি নির্বাচন করুন (যতগুলো ছবি দেবেন, অর্ডার করার সময় ঠিক ততগুলোই অপশন দেখাবে):</label>
+        {editingProductId && productForm.images.length > 0 && (
+          <div className="flex gap-2 mb-2">
+            {productForm.images.map((img, idx) => (
+              <img key={idx} src={img} alt="" className="w-12 h-12 object-cover rounded border" />
+            ))}
+          </div>
+        )}
+        <input type="file" accept="image/*" multiple onChange={handleMultipleImagesUpload} className="border p-1.5 rounded w-full bg-gray-50" />
+      </div>
+      
+      <textarea placeholder="প্রোডাক্ট বিবরণ..." value={productForm.description} onChange={(e) => setProductForm({ ...productForm, description: e.target.value })} className="border p-2 rounded w-full" rows="3"></textarea>
+      <input type="text" placeholder="সাইজসমূহ (যেমন: M, L, XL)" value={productForm.sizes} onChange={(e) => setProductForm({ ...productForm, sizes: e.target.value })} className="border p-2 rounded w-full" />
+      <button type="submit" className="bg-emerald-600 text-white font-bold py-2 rounded w-full">{editingProductId ? "আপডেট করুন" : "পাবলিশ / পোস্ট করুন"}</button>
+    </form>
+
+
+    <div className="space-y-2">
+      <h4 className="font-bold">বিদ্যমান প্রোডাক্টসমূহ:</h4>
+      {products.map(p => (
+        <div key={p.id} className="bg-white p-2 rounded-xl border flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <img src={p.images?.[0] || ''} alt={p.name} className="w-10 h-10 object-cover rounded" />
+            <div>
+              <p className="font-bold line-clamp-1">{p.name}</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-purple-700 font-bold">৳{p.price}</span>
+                {p.regularPrice > p.price && <span className="text-[10px] text-gray-400 line-through">৳{p.regularPrice}</span>}
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-1">
+            <button onClick={() => handleEditProductClick(p)} className="bg-blue-50 text-blue-600 font-bold px-2 py-1 rounded">✏️ Edit</button>
+            <button onClick={() => deleteProduct(p.id)} className="bg-red-50 text-red-500 font-bold px-2 py-1 rounded">✕</button>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
+{/* Categories & Subcategories Management */}
+{adminSection === 'categories' && (
+  <div className="space-y-4">
+    <div className="bg-white p-3 rounded-xl border space-y-3">
+      <h3 className="font-bold border-b pb-1">নতুন ক্যাটাগরি যোগ করুন</h3>
+      <form onSubmit={handleAddCategory} className="flex gap-2">
+        <input type="text" placeholder="ক্যাটাগরি নাম" value={newCatName} onChange={(e) => setNewCatName(e.target.value)} className="border p-2 rounded flex-1" />
+        <button type="submit" className="bg-purple-700 text-white px-4 py-2 rounded font-bold">Add Category</button>
+      </form>
+    </div>
+
+    <div className="bg-white p-3 rounded-xl border space-y-3">
+      <h3 className="font-bold border-b pb-1">নতুন সাব-ক্যাটাগরি যোগ করুন</h3>
+      <form onSubmit={handleAddSubcategory} className="space-y-2">
+        <select value={selectedCatForSub} onChange={(e) => setSelectedCatForSub(e.target.value)} className="w-full border p-2 rounded bg-white">
+          {categories.filter(c => c.name !== 'All').map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+        </select>
+        <div className="flex gap-2">
+          <input type="text" placeholder="সাব-ক্যাটাগরি নাম" value={newSubCatName} onChange={(e) => setNewSubCatName(e.target.value)} className="border p-2 rounded flex-1" />
+          <button type="submit" className="bg-emerald-600 text-white px-4 py-2 rounded font-bold">Add Subcategory</button>
+        </div>
+      </form>
+    </div>
+
+    <div className="bg-white p-3 rounded-xl border space-y-2">
+      <h3 className="font-bold border-b pb-1">ক্যাটাগরি তালিকা</h3>
+      {categories.map(cat => (
+        <div key={cat.name} className="border-b pb-2 mb-2">
+          <div className="flex justify-between items-center font-bold text-purple-700">
+            <span>📂 {cat.name}</span>
+            {cat.name !== 'All' && <button onClick={() => deleteCategory(cat.name)} className="text-red-500 text-[10px]">Delete</button>}
+          </div>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {cat.subcategories && cat.subcategories.map(sub => (
+              <span key={sub} className="bg-gray-100 px-2 py-0.5 rounded text-[11px] flex items-center gap-1">
+                {sub} <button onClick={() => deleteSubcategory(cat.name, sub)} className="text-red-500 font-bold">×</button>
+              </span>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
 
                 {/* Categories & Subcategories Management */}
                 {adminSection === 'categories' && (
