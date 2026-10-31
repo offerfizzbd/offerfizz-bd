@@ -936,7 +936,7 @@ export default function App() {
                       <div><label className="block font-semibold mb-1">হোয়াটসঅ্যাপ লিঙ্ক:</label><input type="text" value={settings.whatsappUrl} onChange={(e) => setSettings({ ...settings, whatsappUrl: e.target.value })} className="border rounded p-2 w-full" /></div>
                     </div>
 
-                    <div className="bg-white p-3 rounded-xl border space-y-2">
+                                        <div className="bg-white p-3 rounded-xl border space-y-2">
                       <h3 className="font-bold border-b pb-1">অ্যাডমিন পাসওয়ার্ড পরিবর্তন</h3>
                       <form onSubmit={handlePasswordChange} className="space-y-2">
                         <input type="password" placeholder="পুরানো পাসওয়ার্ড" value={passForm.oldPass} onChange={(e) => setPassForm({ ...passForm, oldPass: e.target.value })} className="w-full border p-2 rounded" />
@@ -949,8 +949,17 @@ export default function App() {
                 )}
               </div>
             )}
-          </main>
+          </div>
         )}
+
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-10 text-gray-600 text-[11px]">
+          <button onClick={() => { setActiveTab('home'); setActivePageContent(null); }} className={activeTab === 'home' && !activePageContent ? 'text-purple-700 font-bold' : ''}>🛍️ হোম</button>
+          <button onClick={() => { setActiveTab('profile'); setActivePageContent(null); }} className={activeTab === 'profile' && !activePageContent ? 'text-purple-700 font-bold' : ''}>👤 প্রোফাইল</button>
+        </div>
+      </div>
+    );
+  }
+
                 {/* Order Modal */}
         {selectedProduct && (
           <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 text-xs">
