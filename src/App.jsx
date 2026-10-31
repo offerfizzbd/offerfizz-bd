@@ -1039,6 +1039,8 @@ export default function App() {
           <button onClick={() => { setActiveTab('profile'); setActivePageContent(null); }} className={activeTab === 'profile' && !activePageContent ? 'text-purple-700 font-bold' : ''}>👤 প্রোফাইল</button>
         </div>
       </div>
+    );
+  }
 
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-300 p-6 mt-8 text-xs space-y-4">
