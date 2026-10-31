@@ -842,7 +842,7 @@ export default function App() {
                             <span>📂 {cat.name}</span>
                             {cat.name !== 'All' && <button onClick={() => deleteCategory(cat.name)} className="text-red-500 text-[10px]">Delete</button>}
                           </div>
-                          <div className="flex flex-wrap gap-1 mt-1">
+                                                    <div className="flex flex-wrap gap-1 mt-1">
                             {cat.subcategories && cat.subcategories.map(sub => (
                               <span key={sub} className="bg-gray-100 px-2 py-0.5 rounded text-[11px] flex items-center gap-1">
                                 {sub} <button onClick={() => deleteSubcategory(cat.name, sub)} className="text-red-500 font-bold">×</button>
@@ -857,6 +857,7 @@ export default function App() {
 
                 {/* Customers Management */}
                 {adminSection === 'customers' && (
+
                   <div className="space-y-3">
                     <h3 className="font-bold">কাস্টমার অ্যাকাউন্ট ম্যানেজমেন্ট (নাম, ফোন, ঠিকানা)</h3>
                     {customers.length === 0 ? <p className="bg-white p-4 rounded border text-center text-gray-500">কোনো রেজিস্টার্ড কাস্টমার নেই</p> : (
