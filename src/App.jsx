@@ -660,14 +660,7 @@ export default function App() {
                             {categories.find(c => c.name === productForm.category)?.subcategories?.map(sub => <option key={sub} value={sub}>{sub}</option>)}
                           </select>
                         </div>
-                      </div>
-
-                      <div>
-  <label className="block font-bold text-gray-600 mb-1">Colors (enter with commas, e.g. Black, Blue, Red):</label>
-  <input type="text" placeholder="Black, Navy Blue" value={productForm.colorsStr} onChange={(e) => setProductForm({ ...productForm, colorsStr: e.target.value })} className="border p-2 rounded w-full" />
-</div>
-
-                        )}
+                      </div
                         <input type="file" accept="image/*" multiple onChange={handleMultipleImagesUpload} className="border p-1.5 rounded w-full bg-gray-50" />
                       </div>
                       <textarea placeholder="প্রোডাক্ট বিবরণ..." value={productForm.description} onChange={(e) => setProductForm({ ...productForm, description: e.target.value })} className="border p-2 rounded w-full" rows="3"></textarea>
