@@ -660,13 +660,25 @@ export default function App() {
                             {categories.find(c => c.name === productForm.category)?.subcategories?.map(sub => <option key={sub} value={sub}>{sub}</option>)}
                           </select>
                         </div>
-                      </div
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-gray-600 mb-1">প্রোডাক্ট ছবি নির্বাচন করুন (যতগুলো ছবি দেবেন, অর্ডার করার সময় ঠিক ততগুলোই অপশন দেখাবে):</label>
+                        {editingProductId && productForm.images.length > 0 && (
+                          <div className="flex gap-2 mb-2">
+                            {productForm.images.map((img, idx) => (
+                              <img key={idx} src={img} alt="" className="w-12 h-12 object-cover rounded border" />
+                            ))}
+                          </div>
+                        )}
                         <input type="file" accept="image/*" multiple onChange={handleMultipleImagesUpload} className="border p-1.5 rounded w-full bg-gray-50" />
                       </div>
+                      
                       <textarea placeholder="প্রোডাক্ট বিবরণ..." value={productForm.description} onChange={(e) => setProductForm({ ...productForm, description: e.target.value })} className="border p-2 rounded w-full" rows="3"></textarea>
                       <input type="text" placeholder="সাইজসমূহ (যেমন: M, L, XL)" value={productForm.sizes} onChange={(e) => setProductForm({ ...productForm, sizes: e.target.value })} className="border p-2 rounded w-full" />
                       <button type="submit" className="bg-emerald-600 text-white font-bold py-2 rounded w-full">{editingProductId ? "আপডেট করুন" : "পাবলিশ / পোস্ট করুন"}</button>
                     </form>
+
 
                     <div className="space-y-2">
                       <h4 className="font-bold">বিদ্যমান প্রোডাক্টসমূহ:</h4>
